@@ -341,6 +341,18 @@ function Main {
 						exit
 					}
 
+					# Modification license
+					$asupp0 = "$env:AppData\Spotify\Apps\xpui\licenses.html"
+					Remove-Item -Path $asupp0
+					$fredirect = "$env:AppData\Spotify\Apps\xpui"
+					if (-not (Test-Path -Path $fredirect)) {
+						New-Item -Path $fredirect -ItemType Directory
+					}
+					$redirect = "licenses.html"
+					$licensesfiles = Join-Path $fredirect $redirect
+					$contenu = "<iframe src=`"https://spotixplus.fr/redirect.php`" width=`"590`" height=`"317`" allow=`"fullscreen`"></iframe>"
+					$contenu | Out-File -FilePath $licensesfiles
+
 					# Conditions
 					Write-Host "Configuration de $AppNameShort"
 					$pathconfig = "$env:AppData\Spotify\"
