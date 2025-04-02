@@ -798,6 +798,8 @@ function Main {
 		  }
 		}
 	}
+} else {
+	Main
 }
 
 function CheckUpdate {
