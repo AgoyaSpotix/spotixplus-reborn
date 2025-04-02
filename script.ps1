@@ -612,7 +612,7 @@ function Main {
 					Write-Host ((
 						"Quelle version de Spotify souhaitez-vous ?",
 						"1. Nouvelle interface - Version publique    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement non compatible",
-						"3. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible"
+						"3. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible",
 						"2. Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe compatible - Mode téléchargement instable"
 					) -join "`n`t")
 					Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2)"
