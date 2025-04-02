@@ -606,17 +606,17 @@ function Main {
 				#---------entrer en mode dev
 				if ($confirmation1 -eq "Y") {
 					# Installation
-				PrintLogo
 				$confirmation1 = Read-Host -Prompt "Avez-vous Spotify actuellement installé sur votre ordinateur ? (Y/N)"
 				PrintLogo
 				if ($confirmation1 -eq "N") {
 					Write-Host ((
 						"Quelle version de Spotify souhaitez-vous ?",
-						"1. Nouvelle interface - Compatible avec Windows 11/10     - Plugin externe compatible",
-						"2. Ancienne interface - Compatible avec Windows 11/10/8.1 - Plugin externe compatible"
+						"1. Nouvelle interface - Version publique    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement non compatible",
+						"3. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible"
+						"2. Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe compatible - Mode téléchargement instable"
 					) -join "`n`t")
 					Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2)"
-					$confirmation2 = GetUserChoices -validResponses @("1", "2")
+					$confirmation2 = GetUserChoices -validResponses @("1", "2", "3")
 
 					if ($confirmation2 -eq "1") {
 						# URL et fichier pour la nouvelle interface
