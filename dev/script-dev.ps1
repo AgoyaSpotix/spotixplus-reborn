@@ -25,7 +25,7 @@ $Logo = "
 
        ----------------------------------------------
       /     Merci d'avoir téléchargé le script      /
-     / 		    		Made with <3                 /
+     / 		      Made with <3                 /
     /                Version $Version                  /
    -----------------------------------------------
 "
@@ -438,7 +438,7 @@ function Main {
 					Write-Host "La fonctionnalité de téléchargement permet de télécharger vos musiques préférés juste en les écoutant !"
 					Write-Host "Il suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement enregistrée."
 					Write-Host "Vos musiques téléchargées seront disponible dans votre dossier Musique dans votre Explorateur de fichiers, puis Soggfy."
-					Write-Host "Pour en savoir plus, veuillez consulter le tutoriel sur le site de $AppNameShort."
+					Write-Host "Pour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/dev/tuto-telechargement.md"
 					Write-Host ""
 					$confirmation0 = Read-Host -Prompt "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)"
 					if ($confirmation0 -eq "Y") {
@@ -553,9 +553,30 @@ function Main {
 					Main
 					 }
 				} else {
-					# Erreur Spotify déjà installé
-					Write-Host "Avant d'installer $AppNameShort, veuillez tout d'abord désinstaller Spotify (ou Spotify Windows Store)"
-					EnterToContinue -DefaultPrompt $true
+					# Erreur Spotify déjà installé, désinstallation de Spotify
+					
+					Write-Host "Avant d'installer $AppNameShort, vous devez d'abord désinatller Spotify."
+					$confirmation1 = Read-Host -Prompt "Voulez-vous désinstaller Spotify ? (Y/N)"
+					if ($confirmation1 -eq "Y") {
+						# Lancement de la désinstallation
+						Write-Host "Lancement de la désinstallation de Spotify..."
+						Write-Host "Après avoir appyué sur OK, pressez Entrée..."
+						Start-Process -FilePath "$env:UserProfile\AppData\Roaming\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
+						if (Test-Path "$env:UserProfile\AppData\Roaming\Spotify\Spotify.exe") {
+							Write-Host "La désinstallation de Spotify a échoué. Veuillez recommencer." -ForegroundColor Red
+							Read-Host "Appuyez sur Entrée pour continuer..."							
+						} else {
+							Write-Host "Spotify a correctement été désinstallé ! " -ForegroundColor Green
+							Read-Host "Vous n'avez plus qu'à relancer l'installation de $AppNameShort. Veuillez presser Entrée..."
+						}
+						
+					}
+
+					else {
+						Write-Host "Retour au menu principal dans 3 secondes..."
+						Start-Sleep -Seconds 3
+					}
+
 					Main
 				} else {
 					#---------sortie du mode dev
