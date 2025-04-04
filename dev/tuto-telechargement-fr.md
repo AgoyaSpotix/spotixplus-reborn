@@ -1,7 +1,6 @@
 # Comment utiliser la fonction de téléchargement des musiques ?
-Depuis la version v1.5, Spotix+ Reborn intègre [Soggfy](https://github.com/Rafiuth/Soggfy), un mod de Spotify permettanr le téléchargement des musiques de la plateforme.
+Depuis la version v1.5, Spotix+ Reborn intègre [Soggfy](https://github.com/Rafiuth/Soggfy), un mod de Spotify permettant le téléchargement des musiques de la plateforme.
 
-## Comment l'utiliser ?
 Il vous suffit d'écouter votre musique en entier pour qu'elle soit automatiquement enregsitrée.
 Vous pouvez voir un voyant de progression ici :
 ![image](https://github.com/user-attachments/assets/93551e86-df0d-4d2a-b534-059db2810a06)
