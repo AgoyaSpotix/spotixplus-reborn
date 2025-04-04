@@ -5,6 +5,7 @@ Simply listen to your music in its entirety and it will be automatically recorde
 You can see a progression mark here :
 ![image](https://github.com/user-attachments/assets/93551e86-df0d-4d2a-b534-059db2810a06)
 Your music is saved in Music > Soggfy.
+
 You can enable/disable the downloading feature here :
 ![Capture d'écran 2025-04-04 194916](https://github.com/user-attachments/assets/144b9bde-0950-46bd-93d3-48b2722ef957)
 
