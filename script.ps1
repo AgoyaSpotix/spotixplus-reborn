@@ -91,8 +91,6 @@ function Download {
 		[string] $URL,
 		[string] $Path
 	)
-	$URL = "https://spotixplus.com/files/windows/script/SoggfyUIC.js"
-	$Path = "$env:AppData\Spotify\SoggfyUIC.js"
 	$webClient = New-Object System.Net.WebClient
 	$bufferSize = 8192  # 8KB
 	$startTime = Get-Date
@@ -434,7 +432,7 @@ function Install {
 		StopSpotify
 		Write-Host "$AppNameShort installé avec succès !"
 		EnterToContinue -DefaultPrompt $true
-		Main
+		return
 	} else {
 		# Erreur Spotify déjà installé, désinstallation de Spotify
 		Write-Host "Avant d'installer $AppNameShort, vous devez d'abord désinatller Spotify."
@@ -446,17 +444,18 @@ function Install {
 			Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
 			if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
 				Write-Host "La désinstallation de Spotify a échoué. Veuillez recommencer." -ForegroundColor Red
-				Read-Host "Appuyez sur Entrée pour continuer..."
+				EnterToContinue -DefaultPrompt $true
 			} else {
 				Write-Host "Spotify a correctement été désinstallé ! " -ForegroundColor Green
-				Read-Host "Vous n'avez plus qu'à relancer l'installation de $AppNameShort. Veuillez presser Entrée..."
-			Main
+				Read-Host "Vous n'avez plus qu'à relancer l'installation de $AppNameShort."
+				EnterToContinue
+				return
 			}
 		} else {
 			Write-Host "Impossible d'installer Spotix+ Reborn. Retour au menu principal dans 3 secondes..."
 			Start-Sleep -Seconds 3
 		}
-		Main
+		return
 	}
 }
 
@@ -468,7 +467,7 @@ function Uninstall {
 		SetTitle "Erreur"
 		Write-Host "Vous ne pouvez pas déinstaller $AppNameShort car celui-ci n'est pas installé."
 		EnterToContinue -DefaultPrompt $true
-		Main
+		return
 	}
 
 	$confirmation = Read-Host -Prompt "Êtes vous sûr de vouloir désinstaller $AppNameShort et tout ses composants ? (Y/N)"
@@ -496,15 +495,16 @@ function Uninstall {
 		RemoveIfExists "$env:AppData\Spotify"
 		RemoveIfExists "$env:LocalAppData\Spotify"
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
+		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
 		RemoveIfExists "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe"
 
 		Write-Host "$AppNameShort désinstallé avec succès !"
 		EnterToContinue -DefaultPrompt $true
-		Main
+		return
 	} else {
 		Write-Host "Annulation.."
 		EnterToContinue -DefaultPrompt $true
-		Main
+		return
 	}
 }
 
@@ -513,11 +513,11 @@ function HighQuality {
 	SetTitle "Configuration Audio"
 	PrintLogo
 
-	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
+	if (-not (Test-Path -Path "$env:AppData\Spotify")) {
 		SetTitle "Erreur"
 		Write-Host "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
 		EnterToContinue -DefaultPrompt $true
-		Main
+		return
 	}
 
 	# Fichier trouvé
@@ -618,8 +618,6 @@ function HighQuality {
 			Write-Host "La qualité très élevée a été supprimée avec succès !"
 			EnterToContinue -DefaultPrompt $true
 		}
-		"3" {
-		}
 	}
 }
 
@@ -632,13 +630,13 @@ function Soggify {
 		SetTitle "Erreur"
 		Write-Host "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
 		EnterToContinue -DefaultPrompt $true
-		Main
+		return
 	}
 	if (Test-Path -Path "$env:AppData\Spotify\SoggfyUIC.js") {
 		SetTitle "Erreur"
 		Write-Host "Le mode téléchargement est déjà activé pour $AppNameShort"
 		EnterToContinue -DefaultPrompt $true
-		Main
+		return
 	}
 	Write-Host "Voici les versions compatible avec la fonctionnalitée de téléchargement:"
 	Write-Host "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Mode téléchargement instable"
@@ -676,9 +674,6 @@ function Soggify {
 
 		Write-Host "La fonctionnalité téléchargement est installée avec succès !"
 		EnterToContinue
-		Main
-	} else {
-		Main
 	}
 }
 
@@ -713,6 +708,7 @@ function Main {
 	switch ($userChoices0.Trim()) {
 		"1" {
 			Install
+			Main
 		}
 		"2" {
 			HighQuality
@@ -724,6 +720,7 @@ function Main {
 		}
 		"4" {
 			Uninstall
+			Main
 		}
 		"5" {
 			Write-Host "Ouverture de la page GitHub.."
@@ -741,6 +738,7 @@ function Main {
 		}
 		"8" {
 			InstallDev
+			Main
 		}
 	}
 }
