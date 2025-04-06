@@ -2,12 +2,6 @@ name: Upload nightly
 
 on:
    workflow_dispatch:
-     inputs:
-       body:
-         description: "The body of the nightly release"
-         default: "**AVERTISSEMENT :** cette version est en cours de développement, elle peut être instable !"
-         required: true
-         type: string
 
 jobs:
   build:
@@ -25,5 +19,5 @@ jobs:
           name: 'SpotiX+ Reborn - BETA'
           prerelease: true
           draft: true
-          body: '${{ github.event.inputs.body }}'
+          body: '**AVERTISSEMENT :** cette version est en cours de développement, elle peut être instable !'
           files: 'script.ps1'
