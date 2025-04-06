@@ -12,7 +12,7 @@ Nous avons donc décidé de prendre le relais, ainsi fut né SpotiX+ Reborn.
 Rendez-vous sur la section [Releases](https://github.com/DelofJ/spotixplus-windows/releases) pour pouvoir télécharger la dernière version du programme.\
 Téléchargez et lancez le fichier `script.ps1`.\
 Il vous faudra PowerShell 7 pour lancer ce script.\
-Si il n'est pas présent sur votre machine, vous pourrez le lancer avec PowerShell 5 (installé de base sur Windows) et le script vous fera automatiquement installer PowerShell 7.
+Si il n'est pas présent sur votre machine, vous pourrez le lancer avec PowerShell 5 (installé de base sur Windows) et le script vous installera automatiquement PowerShell 7.
 
 ## Bugs connus
 Si vous un des messages suivants qui apparaissent :
@@ -29,7 +29,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 Vous devriez maintenant être capable de lancer le script !
 
 ## J'ai d'autres bugs !
-Regardez si quelqu'un n'a pas déjà reporté le bug dans l'onglet [Issues](https://github.com/DelofJ/spotixplus-windows/issues).\
+Regardez si quelqu'un n'a pas déjà reporté le bug dans l'onglet [Issues](https://github.com/AgoyaSpotix/spotixplus-windows/issues).\
 Si c'est le cas, envoyez une réponse en disant que cela vous arrive aussi.\
 Sinon, signalez-le de vous même.
 
