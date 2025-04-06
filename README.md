@@ -29,7 +29,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 Vous devriez maintenant être capable de lancer le script !
 
 ## J'ai d'autres bugs !
-Regardez si quelqu'un n'a pas déjà reporté le bug dans l'onglet [Issues](https://github.com/AgoyaSpotix/spotixplus-windows/issues).\
+Regardez si quelqu'un n'a pas déjà reporté le bug dans l'onglet [Issues](https://github.com/AgoyaSpotix/spotixplus-reborn/issues).\
 Si c'est le cas, envoyez une réponse en disant que cela vous arrive aussi.\
 Sinon, signalez-le de vous même.
 
