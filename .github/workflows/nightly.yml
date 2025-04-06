@@ -10,13 +10,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check version of the script
+        run: version=cat script.ps1 | grep \$Version -m 1 | grep -oP '"\K[^"\047]+(?=["\047])'
+
       - name: Update Development Nightly
         uses: andelf/nightly-release@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: 'nightly'
-          name: 'SpotiX+ Reborn - BETA'
+          name: 'SpotiX+ Reborn - BETA v${version}'
           prerelease: true
           draft: true
           body: '**AVERTISSEMENT :** cette version est en cours de développement, elle peut être instable !'
