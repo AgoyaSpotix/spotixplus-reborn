@@ -1,0 +1,29 @@
+name: Upload nightly
+
+on:
+   workflow_dispatch:
+     inputs:
+       body:
+         description: "The body of the nightly release"
+         default: "**AVERTISSEMENT :** cette version est en cours de développement, elle peut être instable !"
+         required: true
+         type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update Development Nightly
+        uses: andelf/nightly-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: 'nightly'
+          name: 'SpotiX+ Reborn - BETA'
+          prerelease: true
+          draft: true
+          body: '${{ github.event.inputs.body }}'
+          files: 'script.ps1'
