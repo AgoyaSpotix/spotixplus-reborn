@@ -754,7 +754,7 @@ function CheckUpdate {
 	PrintLogo
 	Write-Host "Une mise à jour du script à été trouvée"
 	Write-Host "v$Version -> $latestVersion"
-	$confirmation = Read-Host -Prompt "Voulez-vous la télécharger ? (Y/N)"
+	$confirmation = Read-Host -Prompt "Voulez-vous la télécharger ? Cela est fortement recommandé.(Y/N)"
 	if ($confirmation -eq "N") { return }
 
 	Invoke-WebRequest "https://github.com/AgoyaSpotix/spotixplus-reborn-windows/releases/download/$latestVersion/script.ps1" -OutFile $PSCommandPath
