@@ -414,23 +414,27 @@ function Install {
 		HighQuality
 
 		#Mode téléchargement
-		Soggify
+		Soggfy
 
 		# Renommer le raccourci Spotify du bureau
-		$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
-		$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
-		Rename-Item -Path $oldFile -NewName $newFile
+		#$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
+		#$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
+		#Rename-Item -Path $oldFile -NewName $newFile
+		Rename-Item -Path "$env:UserProfile\Desktop\Spotify.lnk" -NewName "$AppNameShort.lnk"
+
 
 		# Renommer le raccourci Spotify du menu démarrer
-		$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
-		$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
-		Rename-Item -Path $oldFile -NewName $newFile
+		#$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
+		#$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
+		#Rename-Item -Path $oldFile -NewName $newFile
+		Rename-Item -Path "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk" -NewName "$AppNameShort.lnk"
+
 
 		SetTitle "Installation terminée"
 		PrintLogo
 		Write-Host "Fin de la configuration de $AppNameShort.."
 		StopSpotify
-		Write-Host "$AppNameShort installé avec succès !"
+		Write-Host "$AppNameShort installé avec succès !" -Foregroundcolor Green
 		EnterToContinue -DefaultPrompt $true
 		return
 	} else {
@@ -440,7 +444,6 @@ function Install {
 		if ($confirmation1 -eq "Y") {
 			# Lancement de la désinstallation
 			Write-Host "Lancement de la désinstallation de Spotify..."
-			Write-Host "Après avoir appyué sur OK, pressez Entrée..."
 			Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
 			if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
 				Write-Host "La désinstallation de Spotify a échoué. Veuillez recommencer." -ForegroundColor Red
@@ -448,7 +451,6 @@ function Install {
 			} else {
 				Write-Host "Spotify a correctement été désinstallé ! " -ForegroundColor Green
 				Read-Host "Vous n'avez plus qu'à relancer l'installation de $AppNameShort."
-				EnterToContinue
 				return
 			}
 		} else {
@@ -621,7 +623,7 @@ function HighQuality {
 	}
 }
 
-function Soggify {
+function Soggfy {
 	#Mode téléchargement
 	Clear-Host
 	SetTitle "Fonctionnalité de téléchargement"
@@ -644,12 +646,12 @@ function Soggify {
 	Write-Host "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Mode téléchargement instable"
 	Write-Host ""
 	Write-Host "Le fonctionnement du mode téléchargement n'est pas garanti sur les versions `"instables`"."
-	Write-Host "Si vous avez une version instable, vous pouvez essayer, ça se trouve cela va fonctionner !"
+	Write-Host "Il est tout de même possible que cela fonctionne, n'hésitez pas à tester !"
 	EnterToContinue -DefaultPrompt $true
 	Write-Host ""
 	Write-Host "La fonctionnalité de téléchargement permet de télécharger vos musiques préférées juste en les écoutant !"
-	Write-Host "Il suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement téléchargée."
-	Write-Host "Vos musiques téléchargées seront disponible dans votre dossier Musique dans votre Explorateur de fichiers, puis Soggfy."
+	Write-Host "Il suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement enregistrée."
+	Write-Host "Vos musiques téléchargées seront disponible dans votre dossier Musique, puis Soggfy."
 	Write-Host "Pour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/tutos/tuto-telechargement.md"
 	Write-Host ""
 	$confirmation0 = Read-Host -Prompt "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)"
@@ -672,8 +674,9 @@ function Soggify {
 		}
 		Download -URL "https://spotixplus.com/files/windows/script/ffmpeg.exe" -Path "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe"
 
-		Write-Host "La fonctionnalité téléchargement est installée avec succès !"
-		EnterToContinue
+		Write-Host "La fonctionnalité de téléchargement est installée avec succès !"
+		Write-Host "Le script va continuer..."
+		Start-Sleep -Seconds 3
 	}
 }
 
@@ -693,13 +696,13 @@ function Main {
 
 	Write-Host ((
 		"Que voulez-vous faire ?",
-		"1. Installer $AppNameShort",
-		"2. Activer/Désactiver la qualité très élevée",
-		"3. Activer la fonctionnalité de téléchargement",
-		"4. Désinstaller $AppNameShort",
-		"5. Ouvrir la page GitHub",
-		"6. Rejoindre notre serveur Discord",
-		"7. Fermer le script"
+		"1. 💾 Installer $AppNameShort",
+		"2. 🎶 Activer/Désactiver la qualité très élevée",
+		"3. ⤵️  Activer la fonctionnalité de téléchargement",
+		"4. 🗑️  Désinstaller $AppNameShort",
+		"5. 🌐 Ouvrir la page GitHub",
+		"6. 📨 Rejoindre notre serveur Discord",
+		"7. 👋 Fermer le script"
 	) -join "`n`t")
 
 	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8")
@@ -715,7 +718,7 @@ function Main {
 			Main
 		}
 		"3" {
-			Soggify
+			Soggfy
 			Main
 		}
 		"4" {
