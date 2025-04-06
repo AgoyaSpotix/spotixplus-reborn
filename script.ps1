@@ -1,35 +1,57 @@
 ﻿# Constantes
 $AppNameShort = "SpotiX+ Reborn"
 $AppName = "$AppNameShort PC Script"
-$Version = "1.4.1b"
+$Version = "1.5"
 $ByPassAdmin = $false
 
 $GithubUser = "AgoyaSpotix"
-$GithubRepo = "spotixplus-reborn-windows"
+$GithubRepo = "spotixplus-reborn"
 $Discord = "https://discord.gg/p3AAf7TUPv"
 
 # Logo fait avec https://patorjk.com/software/taag/
 $Logo = "
-       ____                    _     _  __  __        
-      / ___|   _ __     ___   | |_  (_) \ \/ /    _   
-      \___ \  | '_ \   / _ \  | __| | |  \  /   _| |_ 
+       ____                    _     _  __  __
+      / ___|   _ __     ___   | |_  (_) \ \/ /    _
+      \___ \  | '_ \   / _ \  | __| | |  \  /   _| |_
        ___) | | |_) | | (_) | | |_  | |  /  \  |_   _|
-      |____/  | .__/   \___/   \__| |_| /_/\_\   |_|  
-              |_|  ____      _                       
-                  |  _ \ ___| |__   ___  _ __ _ __    
-                  | |_) / _ \ '_ \ / _ \| '__| '_ \   
-                  |  _ <  __/ |_) | (_) | |  | | | |  
-                  |_| \_\___|_.__/ \___/|_|  |_| |_|  
+      |____/  | .__/   \___/   \__| |_| /_/\_\   |_|
+              |_|  ____      _
+                  |  _ \ ___| |__   ___  _ __ _ __
+                  | |_) / _ \ '_ \ / _ \| '__| '_ \
+                  |  _ <  __/ |_) | (_) | |  | | | |
+                  |_| \_\___|_.__/ \___/|_|  |_| |_|
 
        ----------------------------------------------
       /     Merci d'avoir téléchargé le script      /
-     / App tierces utilisées: SpotX CLI, Spicetify /
+     /                Made with <3                 /
     /                Version $Version                  /
    -----------------------------------------------
 "
 
-# Paramètre PowerShell
+# Paramètres PowerShell
 $ErrorActionPreference = "Continue"
+
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public class WinAPI {
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+}
+"@ -Language CSharp
+Start-Sleep -Milliseconds 500
+$hWnd = [WinAPI]::GetForegroundWindow()
+$X = 500      # Position X (à partir du coin gauche de l'écran)
+$Y = 300      # Position Y (à partir du haut de l'écran)
+$Width = 1500 # Largeur de la fenêtre
+$Height = 800 # Hauteur de la fenêtre
+
+[WinAPI]::MoveWindow($hWnd, $X, $Y, $Width, $Height, $true)
+
 
 function EnterToContinue {
 	param (
@@ -62,6 +84,38 @@ function RemoveIfExists {
 	if (Test-Path -Path $Path) {
 		Remove-Item $Path -Recurse
 	}
+}
+
+function Download {
+	param (
+		[string] $URL,
+		[string] $Path
+	)
+	$URL = "https://spotixplus.com/files/windows/script/SoggfyUIC.js"
+	$Path = "$env:AppData\Spotify\SoggfyUIC.js"
+	$webClient = New-Object System.Net.WebClient
+	$bufferSize = 8192  # 8KB
+	$startTime = Get-Date
+	$totalBytesReceived = 0
+
+	$responseStream = $webClient.OpenRead($URL)
+	$fileStream = [System.IO.File]::Create($Path)
+	$buffer = New-Object byte[] $bufferSize
+	$totalBytes = $webClient.ResponseHeaders["Content-Length"]
+	$bytesReceived = 0
+
+	while (($readBytes = $responseStream.Read($buffer, 0, $bufferSize)) -gt 0) {
+		$fileStream.Write($buffer, 0, $readBytes)
+		$totalBytesReceived += $readBytes
+		$timeElapsed = (Get-Date) - $startTime
+		$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
+		$percentComplete = ($totalBytesReceived / $totalBytes) * 100
+		Clear-Host
+		Write-Progress -Activity "Téléchargement en cours" -Status "$([math]::Round($percentComplete, 2))% complet" -PercentComplete $percentComplete
+	}
+
+	$responseStream.Close()
+	$fileStream.Close()
 }
 
 # Titre fenêtre
@@ -171,7 +225,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 
 # Verification admin ou pas
 if ((-not $ByPassAdmin) -and ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-	Write-Host "Pour pouvoir faire fonctionner correctement le script, celui ci ne dois pas être lancer en administrateur." -ForegroundColor Red
+	Write-Host "Pour pouvoir faire fonctionner correctement le script, celui-ci ne dois pas être lancé en administrateur." -ForegroundColor Red
 	Write-Host "Veuillez redémarrer le script normalement." -ForegroundColor Red
 	EnterToContinue -DefaultPrompt $true
 	exit 1
@@ -185,17 +239,446 @@ function PrintLogo {
 
 function GetUserChoices {
 	param (
-		[string[]]$validResponses
+		[string[]]$validResponses,
+		[bool] $Multiple = $false
 	)
 
 	$responses = $null
 	do {
 		Write-Host " > " -NoNewLine
-		$input = $Host.UI.ReadLine().Replace(" ", "")
-		$responses = $input.Split(",") -ne ''
+		$responses = $Host.UI.ReadLine().Replace(" ", "")
+		if ($Multiple) {
+			$responses = $responses.Split(",") -ne ''
+		}
 	} while ($responses -eq $null)
 
 	return $responses
+}
+
+function InstallDev {
+	#dev
+	Write-Host "Bravo, vous avez trouvé le mode dev !!!"
+	Write-Host "Malheuresement, il n'y a rien à voir ici"
+	Write-Host "Et puis, même si y'avait un truc ici, vous ne devriez pas être là"
+	Write-Host "Donc DÉGAGEZ !!!"
+	Write-Host "Ou restez, jsp, je m'en fous en fait"
+	Write-Host "Si vous souhaitez partir, appuyez sur la touche Entrée"
+	EnterToContinue
+}
+
+function Install {
+	# Installation
+	PrintLogo
+	$confirmation1 = Read-Host -Prompt "Avez-vous Spotify actuellement installé sur votre ordinateur ? (Y/N)"
+	if ($confirmation1 -eq "N") {
+		Write-Host ((
+			"Quelle version de Spotify souhaitez-vous ?",
+			"1. Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable",
+			"2. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible",
+			"3. Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable"
+		) -join "`n`t")
+		Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)"
+		$confirmation2 = GetUserChoices -validResponses @("1", "2", "3")
+		switch ($confirmation2.Trim()) {
+			"1"{
+				# URL et fichier pour la nouvelle interface
+				$url = "https://download.scdn.co/SpotifySetup.exe"
+				$spotifyInstaller = "$env:TEMP\SpotifySetup.exe"
+			}
+			"2" {
+				$url = "https://spotixplus.com/files/windows/script/spotify-verdownload.exe"
+				$spotifyInstaller = "$env:TEMP\spotify-verdownload.exe"
+			}
+			"3" {
+				# URL et fichier pour l'ancienne interface
+				$url = "https://download.scdn.co/SpotifyFull7-8-8.1.exe"
+				$spotifyInstaller = "$env:TEMP\SpotifyFull7-8-8.1.exe"
+			}
+		}
+
+		# Installation de Spotify
+		SetTitle "Installation"
+		PrintLogo
+
+		Write-Host "Téléchargement et installation de Spotify.."
+
+		$webClient = New-Object System.Net.WebClient
+		$webClient.DownloadFile($url, $spotifyInstaller)
+
+		Start-Process $spotifyInstaller
+		Write-Host "Une fois Spotify installé, veuillez presser la touche Entrée..."
+		EnterToContinue
+
+		# SpotX
+		Write-Host "Téléchargement/Installation de SpotX CLI.."
+		SetTitle "SpotX Configuration"
+		Clear-Host
+		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/SpotX-Official/SpotX/main/run.ps1').Content) }"
+		Write-Host "Script 1/2 installés : SpotiX installé"
+
+		# Fermeture de Spotify
+		Write-Host "Fermeture de Spotify pour faciliter l'exécution des scripts"
+		StopSpotify
+
+		# Dossier Spicetify
+		Write-Host "Création des dossiers nécessaires"
+		if (-not (Test-Path -Path "$env:AppData\spicetify\")) {
+			New-Item -Path "$env:AppData\spicetify\" -ItemType Directory
+		}
+
+		# Spicetify
+		SetTitle "Spicetify Configuration"
+		Clear-Host
+		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1').Content) }"
+		Write-Host "Script 2/2 installés : Spicetify"
+		StopSpotify
+
+		# Modification interface
+		Write-Host "Configuration de $AppNameShort"
+		Download -URL "https://spotixplus.fr/files/windows/script/frdesactived.mo" -Path "$env:AppData\Spotify\locales\frdesactived.mo"
+
+		if (Test-Path "$env:AppData\Spotify\locales\frdesactived.mo") {
+			$asupp = "$env:AppData\Spotify\locales\fr.mo"
+			Remove-Item -Path $asupp
+			$oldFile1 = "$env:AppData\Spotify\locales\frdesactived.mo"
+			$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
+			Rename-Item -Path $oldFile1 -NewName $newFile1
+		} else {
+			SetTitle "Erreur"
+			Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
+			Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
+			Write-Host "Merci de contacter le support de $AppNameShort" -ForegroundColor Red
+			EnterToContinue
+			exit
+		}
+
+		# Modification license
+		$asupp0 = "$env:AppData\Spotify\Apps\xpui\licenses.html"
+		Remove-Item -Path $asupp0
+		$fredirect = "$env:AppData\Spotify\Apps\xpui"
+		if (-not (Test-Path -Path $fredirect)) {
+			New-Item -Path $fredirect -ItemType Directory
+		}
+		$redirect = "licenses.html"
+		$licensesfiles = Join-Path $fredirect $redirect
+		$contenu = "<iframe src=`"https://spotixplus.fr/redirect.php`" width=`"590`" height=`"317`" allow=`"fullscreen`"></iframe>"
+		$contenu | Out-File -FilePath $licensesfiles
+
+		# Conditions
+		Write-Host "Configuration de $AppNameShort"
+		$pathconfig = "$env:AppData\Spotify\"
+		New-Item -Path $pathconfig -Name "config.need" -ItemType "File" -Force
+
+		# Plugins
+		SetTitle "Spicetify plugins"
+		PrintLogo
+
+		Write-Host "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
+		Write-Host ((
+			"Souhaitez vous installer des plugins externes ?",
+			"1. Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify",
+			"2. Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,",
+			"                tels que Musixmatch, Netease et Genius",
+			"3. New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
+		) -join "`n`t")
+		Write-Host "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)"
+		Write-Host "Appuyez sur Entrer en laissant vide pour ne rien installer"
+		$userChoices = GetUserChoices -validResponses @("1", "2", "3") -Multiple $true
+
+		# Installation des plugins en fonction des réponses
+		foreach ($choice in $userChoices) {
+			switch ($choice.Trim()) {
+				"1" {
+					Write-Output 'Installation du plugin externe "Reddit"..'
+					spicetify config custom_apps reddit
+					spicetify apply
+					Write-Output 'Plugin externe "Reddit" installé avec succès !'
+				}
+				"2" {
+					Write-Output 'Installation du plugin externe "Lyrics-plus"..'
+					spicetify config custom_apps lyrics-plus
+					spicetify apply
+					Write-Output 'Plugin externe "Lyrics-plus" installé avec succès !'
+				}
+				"3" {
+					Write-Output 'Installation du plugin externe "New-releases"..'
+					spicetify config custom_apps new-releases
+					spicetify apply
+					Write-Output 'Plugin externe "New-releases" installé avec succès !'
+				}
+			}
+		}
+		StopSpotify
+		Clear-Host
+
+		#Qualité audio
+		HighQuality
+
+		#Mode téléchargement
+		Soggify
+
+		# Renommer le raccourci Spotify du bureau
+		$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
+		$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
+		Rename-Item -Path $oldFile -NewName $newFile
+
+		# Renommer le raccourci Spotify du menu démarrer
+		$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
+		$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
+		Rename-Item -Path $oldFile -NewName $newFile
+
+		SetTitle "Installation terminée"
+		PrintLogo
+		Write-Host "Fin de la configuration de $AppNameShort.."
+		StopSpotify
+		Write-Host "$AppNameShort installé avec succès !"
+		EnterToContinue -DefaultPrompt $true
+		Main
+	} else {
+		# Erreur Spotify déjà installé, désinstallation de Spotify
+		Write-Host "Avant d'installer $AppNameShort, vous devez d'abord désinatller Spotify."
+		$confirmation1 = Read-Host -Prompt "Voulez-vous désinstaller Spotify ? (Y/N)"
+		if ($confirmation1 -eq "Y") {
+			# Lancement de la désinstallation
+			Write-Host "Lancement de la désinstallation de Spotify..."
+			Write-Host "Après avoir appyué sur OK, pressez Entrée..."
+			Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
+			if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
+				Write-Host "La désinstallation de Spotify a échoué. Veuillez recommencer." -ForegroundColor Red
+				Read-Host "Appuyez sur Entrée pour continuer..."
+			} else {
+				Write-Host "Spotify a correctement été désinstallé ! " -ForegroundColor Green
+				Read-Host "Vous n'avez plus qu'à relancer l'installation de $AppNameShort. Veuillez presser Entrée..."
+			Main
+			}
+		} else {
+			Write-Host "Retour au menu principal dans 3 secondes..."
+			Start-Sleep -Seconds 3
+		}
+		Main
+	}
+}
+
+function Uninstall {
+	PrintLogo
+	# Désinstallation
+
+	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
+		SetTitle "Erreur"
+		Write-Host "Vous ne pouvez pas déinstaller $AppNameShort car celui-ci n'est pas installé."
+		EnterToContinue -DefaultPrompt $true
+		Main
+	}
+
+	$confirmation = Read-Host -Prompt "Êtes vous sûr de vouloir désinstaller $AppNameShort et tout ses composants ? (Y/N)"
+	PrintLogo
+	if ($confirmation -eq "Y") {
+		SetTitle "Désinstallation"
+		StopSpotify
+		Write-Host "Désinstallation de $AppNameShort.."
+
+		# Suppression des dossiers/fichiers
+		Write-Host "Suppresion de Spicetify.."
+		RemoveIfExists "$env:AppData\spicetify"
+
+		Write-Host "Suppresion de Spotify.."
+
+		$prefs = "$env:AppData\Spotify\prefs"
+		if (Test-Path -Path $prefs) {
+			Set-ItemProperty -Path $prefs -Name IsReadOnly -Value $false
+		}
+		$tmp = "$env:AppData\Spotify\prefs.tmp"
+		if (Test-Path -Path $tmp) {
+			Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $false
+		}
+
+		RemoveIfExists "$env:AppData\Spotify"
+		RemoveIfExists "$env:LocalAppData\Spotify"
+		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
+		RemoveIfExists "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe"
+
+		Write-Host "$AppNameShort désinstallé avec succès !"
+		EnterToContinue -DefaultPrompt $true
+		Main
+	} else {
+		Write-Host "Annulation.."
+		EnterToContinue -DefaultPrompt $true
+		Main
+	}
+}
+
+function HighQuality {
+	# Qualité audio
+	SetTitle "Configuration Audio"
+	PrintLogo
+
+	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
+		SetTitle "Erreur"
+		Write-Host "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
+		EnterToContinue -DefaultPrompt $true
+		Main
+	}
+
+	# Fichier trouvé
+	Write-Host "ATTENTION: ne démarrez pas $AppNameShort pendant ce processus, cela pourrait engendrer des conflits" -ForegroundColor Red
+	Write-Host ((
+		"Quelle qualité audio souhaitez-vous ?",
+		"1. Qualité très élevée",
+		"2. Qualité basique (réglable depuis $AppNameShort)",
+		"3. Laisser tel quel"
+	) -join "`n`t")
+	$userChoices = GetUserChoices -validResponses @("1", "2", "3")
+	PrintLogo
+	SetTitle "Configuration Audio"
+
+	switch ($userChoices.Trim()) {
+		"1" {
+			StopSpotify
+			Write-Host "Configuration de la qualité très élevée"
+			$audioveryhigh = (
+				"audio.sync_bitrate=320000",
+				"audio.play_bitrate=320000"
+			)
+
+			$prefs = "$env:AppData\Spotify\prefs"
+			$tmp = "$env:AppData\Spotify\prefs.tmp"
+			Add-Content -Path $prefs -Value $audioveryhigh
+			Set-ItemProperty -Path $prefs -Name IsReadOnly -Value $true
+			Write-Host "."
+			Add-Content -Path $tmp -Value $audioveryhigh
+			Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $true
+			Write-Host ".."
+			Download -URL "https://spotixplus.fr/files/windows/script/fractived.mo" -Path "$env:AppData\Spotify\locales\fractived.mo"
+
+			if (Test-Path "$env:AppData\Spotify\locales\fractived.mo") {
+				Write-Host "..."
+				$asupp = "$env:AppData\Spotify\locales\fr.mo"
+				Remove-Item -Path $asupp
+				$oldFile1 = "$env:AppData\Spotify\locales\fractived.mo"
+				$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
+				Rename-Item -Path $oldFile1 -NewName $newFile1
+			} else {
+				SetTitle "Erreur"
+				Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
+				Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
+				Write-Host "Merci de contacter le support de SpotiX+ Reborn" -ForegroundColor Red
+				EnterToContinue
+				Write-Host "Fermeture de la fenêtre.."
+				Stop-Transcript
+				exit
+			}
+			Write-Host "La qualité très élevée est appliquée !"
+			EnterToContinue -DefaultPrompt $true
+		}
+		"2" {
+			StopSpotify
+			Write-Host "Suppresion de la qualité très élévée"
+			$audioveryhigh = (
+				"audio.sync_bitrate=320000",
+				"audio.play_bitrate=320000"
+			)
+
+			$prefs = "$env:AppData\Spotify\prefs"
+			$tmp = "$env:AppData\Spotify\prefs.tmp"
+			Set-ItemProperty -Path $prefs -Name IsReadOnly -Value $false
+			Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $false
+			if (Test-Path -Path $prefs) {
+				$content = Get-Content -Path $prefs
+				$newContent = $content | Where-Object { $_ -notmatch "audio.sync_bitrate=320000" -and $_ -notmatch "audio.play_bitrate=320000" }
+				Set-Content -Path $prefs -Value $newContent
+				Write-Host "."
+			}
+			if (Test-Path -Path $tmp) {
+				$content = Get-Content -Path $tmp
+				$newContent = $content | Where-Object { $_ -notmatch "audio.sync_bitrate=320000" -and $_ -notmatch "audio.play_bitrate=320000" }
+				Set-Content -Path $tmp -Value $newContent
+				Write-Host ".."
+			}
+
+			Download -URL "https://spotixplus.fr/files/windows/script/frdesactived.mo" -Path "$env:AppData\Spotify\locales\frdesactived.mo"
+
+			if (Test-Path "$env:AppData\Spotify\locales\frdesactived.mo") {
+				Write-Host "..."
+				$asupp = "$env:AppData\Spotify\locales\fr.mo"
+				Remove-Item -Path $asupp
+				$oldFile1 = "$env:AppData\Spotify\locales\frdesactived.mo"
+				$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
+				Rename-Item -Path $oldFile1 -NewName $newFile1
+			} else {
+				SetTitle "Erreur"
+				Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
+				Write-Host "Ne retentez pas de lancer le script, cela pourrait faire des conflits" -ForegroundColor Red
+				Write-Host "Merci de contacter le support de SpotiX+" -ForegroundColor Red
+				EnterToContinue
+				Write-Host "Fermeture de la fenêtre.."
+				Stop-Transcript
+				exit
+			}
+			Write-Host "La qualité très élevée a été supprimée avec succès !"
+			EnterToContinue -DefaultPrompt $true
+		}
+		"3" {
+		}
+	}
+}
+
+function Soggify {
+	#Mode téléchargement
+	Clear-Host
+	SetTitle "Fonctionnalité de téléchargement"
+	PrintLogo
+	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
+		SetTitle "Erreur"
+		Write-Host "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
+		EnterToContinue -DefaultPrompt $true
+		Main
+	}
+	if (Test-Path -Path "$env:AppData\Spotify\SoggfyUIC.js") {
+		SetTitle "Erreur"
+		Write-Host "Le mode téléchargement est déjà activé pour $AppNameShort"
+		EnterToContinue -DefaultPrompt $true
+		Main
+	}
+	Write-Host "Voici les versions compatible avec la fonctionnalitée de téléchargement:"
+	Write-Host "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Mode téléchargement instable"
+	Write-Host "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Mode téléchargement compatible"
+	Write-Host "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Mode téléchargement instable"
+	Write-Host ""
+	Write-Host "Le fonctionnement du mode téléchargement n'est pas garanti sur les versions `"instables`"."
+	Write-Host "Si vous avez une version instable, vous pouvez essayer, ça se trouve cela va fonctionner !"
+	EnterToContinue -DefaultPrompt $true
+	Write-Host ""
+	Write-Host "La fonctionnalité de téléchargement permet de télécharger vos musiques préférées juste en les écoutant !"
+	Write-Host "Il suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement téléchargée."
+	Write-Host "Vos musiques téléchargées seront disponible dans votre dossier Musique dans votre Explorateur de fichiers, puis Soggfy."
+	Write-Host "Pour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/dev/tuto-telechargement.md"
+	Write-Host ""
+	$confirmation0 = Read-Host -Prompt "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)"
+	if ($confirmation0 -eq "Y") {
+		StopSpotify
+		Write-Host "Installation des fichiers nécessaire"
+		Download -URL "https://spotixplus.com/files/windows/script/dpapi.dll" -Path "$env:AppData\Spotify\dpapi.dll"
+		#2
+		Download -URL "https://spotixplus.com/files/windows/script/SoggfyUIC.js" -Path "$env:AppData\Spotify\SoggfyUIC.js"
+
+		#FFMPEG
+		Write-Host "Installation de FFMPEG"
+		$soggfy1 = "$env:LocalAppData/Soggfy/"
+		if (-not (Test-Path -Path $soggfy1)) {
+			New-Item -Path $soggfy1 -ItemType Directory
+		}
+		$soggfy2 = "$env:LocalAppData/Soggfy/ffmpeg/"
+		if (-not (Test-Path -Path $soggfy2)) {
+			New-Item -Path $soggfy2 -ItemType Directory
+		}
+		Download -URL "https://spotixplus.com/files/windows/script/ffmpeg.exe" -Path "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe"
+
+		Write-Host "La fonctionnalité téléchargement est installée avec succès !"
+		EnterToContinue
+		Main
+	} else {
+		Main
+	}
 }
 
 function Main {
@@ -206,6 +689,8 @@ function Main {
 	PrintLogo
 
 	# Accueil du script
+	Write-Host "Apps tierces utilisées: SpotX CLI, Spicetify, Soggfy"
+	Write-Host ""
 	Write-Host "PREVENTION: ce script utilise votre connexion internet pour fonctionner correctement." -ForegroundColor Yellow
 	Write-Host "Ne désactivez pas votre connexion internet pendant l'exécution du script." -ForegroundColor Yellow
 	Write-Host ""
@@ -214,588 +699,47 @@ function Main {
 		"Que voulez-vous faire ?",
 		"1. Installer $AppNameShort",
 		"2. Activer/Désactiver la qualité très élevée",
-		"3. Désinstaller $AppNameShort",
-		"4. Ouvrir la page GitHub",
-		"5. Rejoindre notre serveur Discord",
-		"6. Fermer le script"
+		"3. Activer la fonctionnalité de téléchargement",
+		"4. Désinstaller $AppNameShort",
+		"5. Ouvrir la page GitHub",
+		"6. Rejoindre notre serveur Discord",
+		"7. Fermer le script"
 	) -join "`n`t")
 
-	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7")
+	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8")
 
 	# Exécute les commandes en fonction des réponses
-	foreach ($choice in $userChoices0) {
-		switch ($choice.Trim()) {
-			"1" {
-				# Installation
-				PrintLogo
-				$confirmation1 = Read-Host -Prompt "Avez-vous Spotify actuellement installé sur votre ordinateur ? (Y/N)"
-				PrintLogo
-				if ($confirmation1 -eq "N") {
-					Write-Host ((
-						"Quelle version de Spotify souhaitez-vous ?",
-						"1. Nouvelle interface - Compatible avec Windows 11/10     - Plugin externe compatible",
-						"2. Ancienne interface - Compatible avec Windows 11/10/8.1 - Plugin externe compatible"
-					) -join "`n`t")
-					Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2)"
-					$confirmation2 = GetUserChoices -validResponses @("1", "2")
-
-					if ($confirmation2 -eq "1") {
-						# URL et fichier pour la nouvelle interface
-						$url = "https://download.scdn.co/SpotifySetup.exe"
-						$spotifyInstaller = "$env:TEMP\SpotifySetup.exe"
-					} else {
-						# URL et fichier pour l'ancienne interface
-						$url = "https://download.scdn.co/SpotifyFull7-8-8.1.exe"
-						$spotifyInstaller = "$env:TEMP\SpotifyFull7-8-8.1.exe"
-					}
-
-					# Installation de Spotify
-					SetTitle "Installation"
-					PrintLogo
-
-					Write-Host "Téléchargement et installation de Spotify.."
-
-					$webClient = New-Object System.Net.WebClient
-					$webClient.DownloadFile($url, $spotifyInstaller)
-
-					Start-Process $spotifyInstaller
-					Write-Host "Une fois Spotify installé, vous pouvez appuyer sur la touche Entrée"
-					EnterToContinue
-
-					# SpotX
-					Write-Host "Téléchargement/Installation de SpotX CLI.."
-					SetTitle "SpotX Configuration"
-					Clear-Host
-					[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/SpotX-Official/SpotX/main/run.ps1').Content) }"
-					Write-Host "Script 1/2 installés : SpotiX installé"
-
-					# Fermeture de Spotify
-					Write-Host "Fermeture de Spotify pour faciliter l'exécution des scripts"
-					StopSpotify
-
-					# Dossier Spicetify
-					Write-Host "Création des dossiers nécessaires"
-					if (-not (Test-Path -Path "$env:AppData\spicetify\")) {
-						New-Item -Path "$env:AppData\spicetify\" -ItemType Directory
-					}
-
-					# Spicetify
-					SetTitle "Spicetify Configuration"
-					Clear-Host
-					[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1').Content) }"
-					Write-Host "Script 2/2 installés : Spicetify"
-
-					# Renommer le raccourci Spotify du bureau
-					$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
-					$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
-					Rename-Item -Path $oldFile -NewName $newFile
-
-					# Renommer le raccourci Spotify du menu démarrer
-					$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
-					$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
-					Rename-Item -Path $oldFile -NewName $newFile
-
-					# Arrêt du processus Spotify
-					StopSpotify
-
-					# Modification interface
-					Write-Host "Configuration de $AppNameShort"
-					$url0 = "https://spotixplus.fr/files/windows/script/frdesactived.mo"
-					$fichierLocal0 = "$env:AppData\Spotify\locales\frdesactived.mo"
-					$webClient = New-Object System.Net.WebClient
-					$bufferSize = 8192  # 8KB
-					$startTime = Get-Date
-					$totalBytesReceived = 0
-
-					$responseStream = $webClient.OpenRead($url0)
-					$fileStream = [System.IO.File]::Create($fichierLocal0)
-					$buffer = New-Object byte[] $bufferSize
-					$totalBytes = $webClient.ResponseHeaders["Content-Length"]
-					$bytesReceived = 0
-
-					while (($readBytes = $responseStream.Read($buffer, 0, $bufferSize)) -gt 0) {
-						$fileStream.Write($buffer, 0, $readBytes)
-						$totalBytesReceived += $readBytes
-						$timeElapsed = (Get-Date) - $startTime
-						$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
-						$percentComplete = ($totalBytesReceived / $totalBytes) * 100
-						[System.Console]::SetWindowPosition(0,[System.Console]::CursorTop)
-						Write-Progress -Activity "Téléchargement en cours" -Status "$([math]::Round($percentComplete, 2))% complet" -PercentComplete $percentComplete
-					}
-
-					$responseStream.Close()
-					$fileStream.Close()
-
-					if (Test-Path $fichierLocal0) {
-						$asupp = "$env:AppData\Spotify\locales\fr.mo"
-						Remove-Item -Path $asupp
-						$oldFile1 = "$env:AppData\Spotify\locales\frdesactived.mo"
-						$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
-						Rename-Item -Path $oldFile1 -NewName $newFile1
-					} else {
-						SetTitle "Erreur"
-						Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
-						Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
-						Write-Host "Merci de contacter le support de $AppNameShort" -ForegroundColor Red
-						EnterToContinue
-						exit
-					}
-
-					# Modification license
-					$asupp0 = "$env:AppData\Spotify\Apps\xpui\licenses.html"
-					Remove-Item -Path $asupp0
-					$fredirect = "$env:AppData\Spotify\Apps\xpui"
-					if (-not (Test-Path -Path $fredirect)) {
-						New-Item -Path $fredirect -ItemType Directory
-					}
-					$redirect = "licenses.html"
-					$licensesfiles = Join-Path $fredirect $redirect
-					$contenu = "<iframe src=`"https://spotixplus.fr/redirect.php`" width=`"590`" height=`"317`" allow=`"fullscreen`"></iframe>"
-					$contenu | Out-File -FilePath $licensesfiles
-
-					# Conditions
-					Write-Host "Configuration de $AppNameShort"
-					$pathconfig = "$env:AppData\Spotify\"
-					New-Item -Path $pathconfig -Name "config.need" -ItemType "File" -Force
-
-					# Plugins
-					SetTitle "Spicetify plugins"
-					PrintLogo
-
-					Write-Host "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
-					Write-Host ((
-						"Souhaitez vous installer des plugins externes ?",
-						"1. Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify",
-						"2. Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,",
-						"                tels que Musixmatch, Netease et Genius",
-						"3. New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
-					) -join "`n`t")
-					Write-Host "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)"
-					Write-Host "Appuyez sur Entrer en laissant vide pour ne rien installer"
-					$userChoices = GetUserChoices -validResponses @("1", "2", "3")
-
-					# Installation des plugins en fonction des réponses
-					foreach ($choice in $userChoices) {
-						switch ($choice.Trim()) {
-							"1" {
-								Write-Output 'Installation du plugin externe "Reddit"..'
-								spicetify config custom_apps reddit
-								spicetify apply
-								Write-Output 'Plugin externe "Reddit" installé avec succès !'
-							}
-							"2" {
-								Write-Output 'Installation du plugin externe "Lyrics-plus"..'
-								spicetify config custom_apps lyrics-plus
-								spicetify apply
-								Write-Output 'Plugin externe "Lyrics-plus" installé avec succès !'
-							}
-							"3" {
-								Write-Output 'Installation du plugin externe "New-releases"..'
-								spicetify config custom_apps new-releases
-								spicetify apply
-								Write-Output 'Plugin externe "New-releases" installé avec succès !'
-							}
-						}
-					}
-					SetTitle "Installation terminée"
-					PrintLogo
-					Write-Host "Fin de la configuration de $AppNameShort.."
-					StopSpotify
-					Write-Host "$AppNameShort installé avec succès !"
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				} else {
-					# Erreur Spotify déjà installé
-					Write-Host "Avant d'installer $AppNameShort, veuillez tout d'abord désinstaller Spotify (ou Spotify Windows Store)"
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				}
-
-			}
-			"2" {
-				# Qualité audio
-				SetTitle "Configuration Audio"
-				PrintLogo
-
-				if (-not (Test-Path -Path "$env:AppData\Spotify")) {
-					SetTitle "Erreur"
-					Write-Host "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				}
-
-				# Fichier trouvé
-				Write-Host "ATTENTION: ne démarrez pas $AppNameShort pendant ce processus, cela pourrait engendrer des conflits" -ForegroundColor Red
-				Write-Host ((
-					"Quelle qualité audio souhaitez-vous ?",
-					"1. Qualité très élevée",
-					"2. Qualité basique (réglable depuis $AppNameShort)"
-				) -join "`n`t")
-				$confirmation = GetUserChoices -validResponses @("1", "2")
-				PrintLogo
-				SetTitle "Configuration Audio"
-
-				StopSpotify
-				if ($confirmation -eq "1") {
-					Write-Host "Configuration de la qualité très élevée"
-				} else {
-					Write-Host "Suppresion de la qualité très élévée"
-				}
-
-				$audioveryhigh = (
-					"audio.sync_bitrate=320000",
-					"audio.play_bitrate=320000"
-				) -join "`n"
-
-				$prefs = "$env:AppData\Spotify\prefs"
-				if (Test-Path -Path $prefs) {
-					if ($confirmation -eq "1") {
-						Add-Content -Path $prefs -Value $audioveryhigh
-						Set-ItemProperty -Path $prefs -Name IsReadOnly -Value $true
-					} else {
-						Set-ItemProperty -Path $prefs -Name IsReadOnly -Value $false
-						$content = Get-Content -Path $prefs
-						$newContent = $content | Where-Object { $_ -notmatch "audio.sync_bitrate=320000" -and $_ -notmatch "audio.play_bitrate=320000" }
-						Set-Content -Path $prefs -Value $newContent
-					}
-				}
-				$tmp = "$env:AppData\Spotify\prefs.tmp"
-				if (Test-Path -Path $tmp) {
-					if ($confirmation -eq "1") {
-						Add-Content -Path $tmp -Value $audioveryhigh
-						Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $true
-					} else {
-						Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $false
-						$content = Get-Content -Path $tmp
-						$newContent = $content | Where-Object { $_ -notmatch "audio.sync_bitrate=320000" -and $_ -notmatch "audio.play_bitrate=320000" }
-						Set-Content -Path $tmp -Value $newContent
-					}
-				}
-
-				if ($confirmation -eq "1") {
-					$filename = "fractived.mo"
-				} else {
-					$filename = "frdesactived.mo"
-				}
-				
-				# Modification interface
-				$url0 = "https://spotixplus.fr/files/windows/script/$filename"
-				$fichierLocal0 = "$env:AppData\Spotify\locales\$filename"
-				$webClient = New-Object System.Net.WebClient
-				$bufferSize = 8192  # 8KB
-				$startTime = Get-Date
-				$totalBytesReceived = 0
-
-				$responseStream = $webClient.OpenRead($url0)
-				$fileStream = [System.IO.File]::Create($fichierLocal0)
-				$buffer = New-Object byte[] $bufferSize
-				$totalBytes = $webClient.ResponseHeaders["Content-Length"]
-				$bytesReceived = 0
-
-				while (($readBytes = $responseStream.Read($buffer, 0, $bufferSize)) -gt 0) {
-					$fileStream.Write($buffer, 0, $readBytes)
-					$totalBytesReceived += $readBytes
-					$timeElapsed = (Get-Date) - $startTime
-					$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
-					$percentComplete = ($totalBytesReceived / $totalBytes) * 100
-					[System.Console]::SetWindowPosition(0,[System.Console]::CursorTop)
-					Write-Progress -Activity "Téléchargement en cours" -Status "$([math]::Round($percentComplete, 2))% complet" -PercentComplete $percentComplete
-				}
-
-				$responseStream.Close()
-				$fileStream.Close()
-
-				if (Test-Path $fichierLocal0) {
-					$asupp = "$env:AppData\Spotify\locales\fr.mo"
-					Remove-Item -Path $asupp
-					$oldFile1 = "$env:AppData\Spotify\locales\$filename"
-					$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
-					Rename-Item -Path $oldFile1 -NewName $newFile1
-				} else {
-					SetTitle "Erreur"
-					Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
-					Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
-					Write-Host "Merci de contacter le support de $AppNameShort" -ForegroundColor Red
-					EnterToContinue
-					Write-Host "Fermeture de la fenêtre.."
-					Stop-Transcript
-					exit
-				}
-
-				if ($confirmation -eq "1") {
-					Write-Host "La qualité très élevée est appliquée !"
-				} else {
-					Write-Host "La qualité très élevée a été supprimée avec succès !"
-				}
-				EnterToContinue -DefaultPrompt $true
-				Stop-Transcript
-				exit
-			}
-			"3" {
-				PrintLogo
-				# Désinstallation
-
-				if (-not (Test-Path -Path "$env:AppData\Spotify")) {
-					SetTitle "Erreur"
-					Write-Host "Vous ne pouvez pas déinstaller $AppNameShort car celui-ci n'est pas installé."
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				}
-
-				$confirmation = Read-Host -Prompt "Êtes vous sûr de vouloir désinstaller $AppNameShort et tout ses composants ? (Y/N)"
-				PrintLogo
-				if ($confirmation -eq "Y") {
-					SetTitle "Désinstallation"
-					StopSpotify
-					Write-Host "Désinstallation de $AppNameShort.."
-
-					# Suppression des dossiers/fichiers
-					Write-Host "Suppresion de Spicetify.."
-					RemoveIfExists "$env:AppData\spicetify"
-
-					Write-Host "Suppresion de Spotify.."
-
-					$prefs = "$env:AppData\Spotify\prefs"
-					if (Test-Path -Path $prefs) {
-						Set-ItemProperty -Path $prefs -Name IsReadOnly -Value $false
-					}
-					$tmp = "$env:AppData\Spotify\prefs.tmp"
-					if (Test-Path -Path $tmp) {
-						Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $false
-					}
-
-					RemoveIfExists "$env:AppData\Spotify"
-					RemoveIfExists "$env:LocalAppData\Spotify"
-					RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
-
-					Write-Host "$AppNameShort désinstallé avec succès !"
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				} else {
-					Write-Host "Annulation.."
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				}
-			}
-			"4" {
-				Write-Host "Ouverture de la page GitHub.."
-				Start-Process "https://github.com/$GithubUser/$GithubRepo"
-				Main
-			}
-			"5" {
-				Write-Host "Ouverture de la page GitHub.."
-				Start-Process $Discord
-				Main
-			}
-			"6" {
-				Stop-Transcript
-				exit
-			}
-			"7" {
-				#dev
-				Write-Host "Vous rentrer en mode développeur, vous pouvez quitter ce mode maintenant si vous le souhaitez" -ForegroundColor Yellow
-				Write-Host "Celui-ci pourrait endomagger les fichiers de Spotify ou même de votre ordinateur" -ForegroundColor Yellow
-				$confirmation1 = Read-Host -Prompt "Êtes-vous sûr de vouloir rentrer dans ce mode ? (Y/N)"
-				PrintLogo
-				#---------entrer en mode dev
-				if ($confirmation1 -eq "Y") {
-					# Installation
-				$confirmation1 = Read-Host -Prompt "Avez-vous Spotify actuellement installé sur votre ordinateur ? (Y/N)"
-				PrintLogo
-				if ($confirmation1 -eq "N") {
-					Write-Host ((
-						"Quelle version de Spotify souhaitez-vous ?",
-						"1. Nouvelle interface - Version publique    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement non compatible",
-						"3. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible"
-						"2. Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe compatible - Mode téléchargement instable"
-					) -join "`n`t")
-					Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2)"
-					$confirmation2 = GetUserChoices -validResponses @("1", "2", "3")
-
-					if ($confirmation2 -eq "1") {
-						# URL et fichier pour la nouvelle interface
-						$url = "https://download.scdn.co/SpotifySetup.exe"
-						$spotifyInstaller = "$env:TEMP\SpotifySetup.exe"
-					} else {
-						# URL et fichier pour l'ancienne interface
-						$url = "https://download.scdn.co/SpotifyFull7-8-8.1.exe"
-						$spotifyInstaller = "$env:TEMP\SpotifyFull7-8-8.1.exe"
-					}
-
-					# Installation de Spotify
-					SetTitle "Installation"
-					PrintLogo
-
-					Write-Host "Téléchargement et installation de Spotify.."
-
-					$webClient = New-Object System.Net.WebClient
-					$webClient.DownloadFile($url, $spotifyInstaller)
-
-					Start-Process $spotifyInstaller
-					Write-Host "Une fois Spotify installé, vous pouvez appuyer sur la touche Entrée"
-					EnterToContinue
-
-					# SpotX
-					Write-Host "Téléchargement/Installation de SpotX CLI.."
-					SetTitle "SpotX Configuration"
-					Clear-Host
-					[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/SpotX-Official/SpotX/main/run.ps1').Content) }"
-					Write-Host "Script 1/2 installés : SpotiX installé"
-
-					# Fermeture de Spotify
-					Write-Host "Fermeture de Spotify pour faciliter l'exécution des scripts"
-					StopSpotify
-
-					# Dossier Spicetify
-					Write-Host "Création des dossiers nécessaires"
-					if (-not (Test-Path -Path "$env:AppData\spicetify\")) {
-						New-Item -Path "$env:AppData\spicetify\" -ItemType Directory
-					}
-
-					# Spicetify
-					SetTitle "Spicetify Configuration"
-					Clear-Host
-					[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1').Content) }"
-					Write-Host "Script 2/2 installés : Spicetify"
-
-					# Renommer le raccourci Spotify du bureau
-					$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
-					$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
-					Rename-Item -Path $oldFile -NewName $newFile
-
-					# Renommer le raccourci Spotify du menu démarrer
-					$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
-					$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
-					Rename-Item -Path $oldFile -NewName $newFile
-
-					# Arrêt du processus Spotify
-					StopSpotify
-
-					# Modification interface
-					Write-Host "Configuration de $AppNameShort"
-					$url0 = "https://spotixplus.fr/files/windows/script/frdesactived.mo"
-					$fichierLocal0 = "$env:AppData\Spotify\locales\frdesactived.mo"
-					$webClient = New-Object System.Net.WebClient
-					$bufferSize = 8192  # 8KB
-					$startTime = Get-Date
-					$totalBytesReceived = 0
-
-					$responseStream = $webClient.OpenRead($url0)
-					$fileStream = [System.IO.File]::Create($fichierLocal0)
-					$buffer = New-Object byte[] $bufferSize
-					$totalBytes = $webClient.ResponseHeaders["Content-Length"]
-					$bytesReceived = 0
-
-					while (($readBytes = $responseStream.Read($buffer, 0, $bufferSize)) -gt 0) {
-						$fileStream.Write($buffer, 0, $readBytes)
-						$totalBytesReceived += $readBytes
-						$timeElapsed = (Get-Date) - $startTime
-						$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
-						$percentComplete = ($totalBytesReceived / $totalBytes) * 100
-						[System.Console]::SetWindowPosition(0,[System.Console]::CursorTop)
-						Write-Progress -Activity "Téléchargement en cours" -Status "$([math]::Round($percentComplete, 2))% complet" -PercentComplete $percentComplete
-					}
-
-					$responseStream.Close()
-					$fileStream.Close()
-
-					if (Test-Path $fichierLocal0) {
-						$asupp = "$env:AppData\Spotify\locales\fr.mo"
-						Remove-Item -Path $asupp
-						$oldFile1 = "$env:AppData\Spotify\locales\frdesactived.mo"
-						$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
-						Rename-Item -Path $oldFile1 -NewName $newFile1
-					} else {
-						SetTitle "Erreur"
-						Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
-						Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
-						Write-Host "Merci de contacter le support de $AppNameShort" -ForegroundColor Red
-						EnterToContinue
-						exit
-					}
-
-					# Modification license
-					$asupp0 = "$env:AppData\Spotify\Apps\xpui\licenses.html"
-					Remove-Item -Path $asupp0
-					$fredirect = "$env:AppData\Spotify\Apps\xpui"
-					if (-not (Test-Path -Path $fredirect)) {
-						New-Item -Path $fredirect -ItemType Directory
-					}
-					$redirect = "licenses.html"
-					$licensesfiles = Join-Path $fredirect $redirect
-					$contenu = "<iframe src=`"https://spotixplus.fr/redirect.php`" width=`"590`" height=`"317`" allow=`"fullscreen`"></iframe>"
-					$contenu | Out-File -FilePath $licensesfiles
-
-					# Conditions
-					Write-Host "Configuration de $AppNameShort"
-					$pathconfig = "$env:AppData\Spotify\"
-					New-Item -Path $pathconfig -Name "config.need" -ItemType "File" -Force
-
-					# Plugins
-					SetTitle "Spicetify plugins"
-					PrintLogo
-
-					Write-Host "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
-					Write-Host ((
-						"Souhaitez vous installer des plugins externes ?",
-						"1. Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify",
-						"2. Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,",
-						"                tels que Musixmatch, Netease et Genius",
-						"3. New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
-					) -join "`n`t")
-					Write-Host "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)"
-					Write-Host "Appuyez sur Entrer en laissant vide pour ne rien installer"
-					$userChoices = GetUserChoices -validResponses @("1", "2", "3")
-
-					# Installation des plugins en fonction des réponses
-					foreach ($choice in $userChoices) {
-						switch ($choice.Trim()) {
-							"1" {
-								Write-Output 'Installation du plugin externe "Reddit"..'
-								spicetify config custom_apps reddit
-								spicetify apply
-								Write-Output 'Plugin externe "Reddit" installé avec succès !'
-							}
-							"2" {
-								Write-Output 'Installation du plugin externe "Lyrics-plus"..'
-								spicetify config custom_apps lyrics-plus
-								spicetify apply
-								Write-Output 'Plugin externe "Lyrics-plus" installé avec succès !'
-							}
-							"3" {
-								Write-Output 'Installation du plugin externe "New-releases"..'
-								spicetify config custom_apps new-releases
-								spicetify apply
-								Write-Output 'Plugin externe "New-releases" installé avec succès !'
-							}
-						}
-					}
-					SetTitle "Installation terminée"
-					PrintLogo
-					Write-Host "Fin de la configuration de $AppNameShort.."
-					StopSpotify
-					Write-Host "$AppNameShort installé avec succès !"
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				} else {
-					# Erreur Spotify déjà installé
-					Write-Host "Avant d'installer $AppNameShort, veuillez tout d'abord désinstaller Spotify (ou Spotify Windows Store)"
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				} else {
-					#---------sortie du mode dev
-					Main
-				}
-			}
-		  }
+	switch ($userChoices0.Trim()) {
+		"1" {
+			Install
+		}
+		"2" {
+			HighQuality
+			Main
+		}
+		"3" {
+			Soggify
+			Main
+		}
+		"4" {
+			Uninstall
+		}
+		"5" {
+			Write-Host "Ouverture de la page GitHub.."
+			Start-Process "https://github.com/$GithubUser/$GithubRepo"
+			Main
+		}
+		"6" {
+			Write-Host "Ouverture de la page GitHub.."
+			Start-Process $Discord
+			Main
+		}
+		"7" {
+			Stop-Transcript
+			exit
+		}
+		"8" {
+			InstallDev
 		}
 	}
 }
