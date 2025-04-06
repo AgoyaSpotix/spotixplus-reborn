@@ -1,6 +1,6 @@
 # SpotiX+ Reborn Windows
 
-![logo_horizontal](https://raw.githubusercontent.com/AgoyaSpotix/spotixplus-reborn-windows/refs/heads/main/logo/logo_horizontal.png)
+![logo_horizontal](https://raw.githubusercontent.com/AgoyaSpotix/spotixplus-reborn-windows/refs/heads/main/assets/logo_horizontal.png)
 
 ## Qu'est-ce que SpotiX+ Reborn ?
 Il s'agit d'une version modifiée de Spotify, vous permettant de ne plus avoir de pub, passer les titres à l'infini, et bien plus encore !
