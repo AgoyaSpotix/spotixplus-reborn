@@ -4,7 +4,7 @@ on:
    workflow_dispatch:
 
 jobs:
-  build:
+  upload:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -13,7 +13,7 @@ jobs:
       - name: Check version of the script
         run: |
           echo "VERSION=$(cat script.ps1 | grep \$Version -m 1 | grep -oP '"\K[^"\047]+(?=["\047])')" >> $GITHUB_ENV
-          echo "Found version v${version}"
+          echo "Found version v${{ env.VERSION }}"
 
       - name: Update Development Nightly
         uses: andelf/nightly-release@main
