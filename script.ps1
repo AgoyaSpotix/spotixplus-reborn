@@ -162,7 +162,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 	if (-not $powershellPath) {
 		SetTitle "Erreur"
 		Clear-Host
-		Write-Host "PowerShell 7 n'est pas installé sur ce système." -ForegroundColor Red
+		Write-Host "PowerShell 7 n'est pas installé sur ce système. Ce dernier est nécessaire pour utiliser Spotix+ Reborn." -ForegroundColor Red
 		$confirmation = Read-Host -Prompt "Souhaitez-vous installer PowerShell 7 ? (Y/N)"
 
 		if ($confirmation -eq "Y") {
@@ -257,6 +257,7 @@ function GetUserChoices {
 
 function InstallDev {
 	#dev
+	#Delof le farfadet malicieux
 	Write-Host "Bravo, vous avez trouvé le mode dev !!!"
 	Write-Host "Malheuresement, il n'y a rien à voir ici"
 	Write-Host "Et puis, même si y'avait un truc ici, vous ne devriez pas être là"
@@ -452,7 +453,7 @@ function Install {
 			Main
 			}
 		} else {
-			Write-Host "Retour au menu principal dans 3 secondes..."
+			Write-Host "Impossible d'installer Spotix+ Reborn. Retour au menu principal dans 3 secondes..."
 			Start-Sleep -Seconds 3
 		}
 		Main
@@ -651,7 +652,7 @@ function Soggify {
 	Write-Host "La fonctionnalité de téléchargement permet de télécharger vos musiques préférées juste en les écoutant !"
 	Write-Host "Il suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement téléchargée."
 	Write-Host "Vos musiques téléchargées seront disponible dans votre dossier Musique dans votre Explorateur de fichiers, puis Soggfy."
-	Write-Host "Pour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/dev/tuto-telechargement.md"
+	Write-Host "Pour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/tutos/tuto-telechargement.md"
 	Write-Host ""
 	$confirmation0 = Read-Host -Prompt "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)"
 	if ($confirmation0 -eq "Y") {
