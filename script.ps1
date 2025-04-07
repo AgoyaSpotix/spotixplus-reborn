@@ -204,7 +204,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 		}
 	}
 
-	Write-Host "Chargement.." -ForegroundColor Yellow
+	Write-Host "Chargement..." -ForegroundColor Yellow
 	$scriptPath = $MyInvocation.MyCommand.Path
 	if ($scriptPath -match "AppData\\Local\\Temp") {
 		if (-Not (Test-Path $log_dir)) {
@@ -268,178 +268,10 @@ function InstallDev {
 function Install {
 	# Installation
 	PrintLogo
-	$confirmation1 = Read-Host -Prompt "Avez-vous Spotify actuellement installé sur votre ordinateur ? (Y/N)"
-	if ($confirmation1 -eq "N") {
-		Write-Host ((
-			"Quelle version de Spotify souhaitez-vous ?",
-			"1. Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable",
-			"2. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible",
-			"3. Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable"
-		) -join "`n`t")
-		Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)"
-		$confirmation2 = GetUserChoices -validResponses @("1", "2", "3")
-		switch ($confirmation2.Trim()) {
-			"1"{
-				# URL et fichier pour la nouvelle interface
-				$url = "https://download.scdn.co/SpotifySetup.exe"
-				$spotifyInstaller = "$env:TEMP\SpotifySetup.exe"
-			}
-			"2" {
-				$url = "https://spotixplus.com/files/windows/script/spotify-verdownload.exe"
-				$spotifyInstaller = "$env:TEMP\spotify-verdownload.exe"
-			}
-			"3" {
-				# URL et fichier pour l'ancienne interface
-				$url = "https://download.scdn.co/SpotifyFull7-8-8.1.exe"
-				$spotifyInstaller = "$env:TEMP\SpotifyFull7-8-8.1.exe"
-			}
-		}
-
-		# Installation de Spotify
-		SetTitle "Installation"
-		PrintLogo
-
-		Write-Host "Téléchargement et installation de Spotify.."
-
-		$webClient = New-Object System.Net.WebClient
-		$webClient.DownloadFile($url, $spotifyInstaller)
-
-		Start-Process $spotifyInstaller
-		Write-Host "Une fois Spotify installé, veuillez presser la touche Entrée..."
-		EnterToContinue
-
-		# SpotX
-		Write-Host "Téléchargement/Installation de SpotX CLI.."
-		SetTitle "SpotX Configuration"
-		Clear-Host
-		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/SpotX-Official/SpotX/main/run.ps1').Content) }"
-		Write-Host "Script 1/2 installés : SpotiX installé"
-
-		# Fermeture de Spotify
-		Write-Host "Fermeture de Spotify pour faciliter l'exécution des scripts"
-		StopSpotify
-
-		# Dossier Spicetify
-		Write-Host "Création des dossiers nécessaires"
-		if (-not (Test-Path -Path "$env:AppData\spicetify\")) {
-			New-Item -Path "$env:AppData\spicetify\" -ItemType Directory
-		}
-
-		# Spicetify
-		SetTitle "Spicetify Configuration"
-		Clear-Host
-		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1').Content) }"
-		Write-Host "Script 2/2 installés : Spicetify"
-		StopSpotify
-
-		# Modification interface
-		Write-Host "Configuration de $AppNameShort"
-		Download -URL "https://spotixplus.fr/files/windows/script/frdesactived.mo" -Path "$env:AppData\Spotify\locales\frdesactived.mo"
-
-		if (Test-Path "$env:AppData\Spotify\locales\frdesactived.mo") {
-			$asupp = "$env:AppData\Spotify\locales\fr.mo"
-			Remove-Item -Path $asupp
-			$oldFile1 = "$env:AppData\Spotify\locales\frdesactived.mo"
-			$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
-			Rename-Item -Path $oldFile1 -NewName $newFile1
-		} else {
-			SetTitle "Erreur"
-			Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
-			Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
-			Write-Host "Merci de contacter le support de $AppNameShort" -ForegroundColor Red
-			EnterToContinue
-			exit
-		}
-
-		# Modification license
-		$asupp0 = "$env:AppData\Spotify\Apps\xpui\licenses.html"
-		Remove-Item -Path $asupp0
-		$fredirect = "$env:AppData\Spotify\Apps\xpui"
-		if (-not (Test-Path -Path $fredirect)) {
-			New-Item -Path $fredirect -ItemType Directory
-		}
-		$redirect = "licenses.html"
-		$licensesfiles = Join-Path $fredirect $redirect
-		$contenu = "<iframe src=`"https://spotixplus.fr/redirect.php`" width=`"590`" height=`"317`" allow=`"fullscreen`"></iframe>"
-		$contenu | Out-File -FilePath $licensesfiles
-
-		# Conditions
-		Write-Host "Configuration de $AppNameShort"
-		$pathconfig = "$env:AppData\Spotify\"
-		New-Item -Path $pathconfig -Name "config.need" -ItemType "File" -Force
-
-		# Plugins
-		SetTitle "Spicetify plugins"
-		PrintLogo
-
-		Write-Host "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
-		Write-Host ((
-			"Souhaitez vous installer des plugins externes ?",
-			"1. Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify",
-			"2. Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,",
-			"                tels que Musixmatch, Netease et Genius",
-			"3. New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
-		) -join "`n`t")
-		Write-Host "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)"
-		Write-Host "Appuyez sur Entrer en laissant vide pour ne rien installer"
-		$userChoices = GetUserChoices -validResponses @("1", "2", "3") -Multiple $true
-
-		# Installation des plugins en fonction des réponses
-		foreach ($choice in $userChoices) {
-			switch ($choice.Trim()) {
-				"1" {
-					Write-Output 'Installation du plugin externe "Reddit"..'
-					spicetify config custom_apps reddit
-					spicetify apply
-					Write-Output 'Plugin externe "Reddit" installé avec succès !'
-				}
-				"2" {
-					Write-Output 'Installation du plugin externe "Lyrics-plus"..'
-					spicetify config custom_apps lyrics-plus
-					spicetify apply
-					Write-Output 'Plugin externe "Lyrics-plus" installé avec succès !'
-				}
-				"3" {
-					Write-Output 'Installation du plugin externe "New-releases"..'
-					spicetify config custom_apps new-releases
-					spicetify apply
-					Write-Output 'Plugin externe "New-releases" installé avec succès !'
-				}
-			}
-		}
-		StopSpotify
-		Clear-Host
-
-		#Qualité audio
-		HighQuality
-
-		#Mode téléchargement
-		Soggfy
-
-		# Renommer le raccourci Spotify du bureau
-		#$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
-		#$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
-		#Rename-Item -Path $oldFile -NewName $newFile
-		Rename-Item -Path "$env:UserProfile\Desktop\Spotify.lnk" -NewName "$AppNameShort.lnk"
-
-
-		# Renommer le raccourci Spotify du menu démarrer
-		#$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
-		#$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
-		#Rename-Item -Path $oldFile -NewName $newFile
-		Rename-Item -Path "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk" -NewName "$AppNameShort.lnk"
-
-
-		SetTitle "Installation terminée"
-		PrintLogo
-		Write-Host "Fin de la configuration de $AppNameShort.."
-		StopSpotify
-		Write-Host "$AppNameShort installé avec succès !" -Foregroundcolor Green
-		EnterToContinue -DefaultPrompt $true
-		return
-	} else {
-		# Erreur Spotify déjà installé, désinstallation de Spotify
-		Write-Host "Avant d'installer $AppNameShort, vous devez d'abord désinatller Spotify."
+	# Détection d'une installation de Spotify
+	if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
+		Write-Host "Une installation de Spotify a été détectée. Pour le bon fonctionnement du script, vous devez la désinstaller." -ForegroundColor Yellow
+		Write-Host "Nous pouvons le faire pour vous." -ForegroundColor Yellow
 		$confirmation1 = Read-Host -Prompt "Voulez-vous désinstaller Spotify ? (Y/N)"
 		if ($confirmation1 -eq "Y") {
 			# Lancement de la désinstallation
@@ -450,14 +282,184 @@ function Install {
 				EnterToContinue -DefaultPrompt $true
 			} else {
 				Write-Host "Spotify a correctement été désinstallé ! " -ForegroundColor Green
-				Read-Host "Vous n'avez plus qu'à relancer l'installation de $AppNameShort."
-				return
+				Write-Host "Le script va continuer..."
+				Start-Sleep -Seconds 3
+				Install
+				Main
 			}
 		} else {
-			Write-Host "Impossible d'installer Spotix+ Reborn. Retour au menu principal dans 3 secondes..."
+			Write-Host "Impossible d'installer Spotix+ Reborn. Retour au menu principal dans 3 secondes..." -ForegroundColor Red
 			Start-Sleep -Seconds 3
-		}
-		return
+			return
+			}
+	} else {
+			Write-Host ((
+				"Quelle version de Spotify souhaitez-vous ?",
+				"1. Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable",
+				"2. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible",
+				"3. Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable"
+			) -join "`n`t")
+			Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)"
+			$confirmation2 = GetUserChoices -validResponses @("1", "2", "3")
+			switch ($confirmation2.Trim()) {
+				"1"{
+					# URL et fichier pour la nouvelle interface
+					$url = "https://download.scdn.co/SpotifySetup.exe"
+					$spotifyInstaller = "$env:TEMP\SpotifySetup.exe"
+				}
+				"2" {
+					$url = "https://spotixplus.com/files/windows/script/spotify-verdownload.exe"
+					$spotifyInstaller = "$env:TEMP\spotify-verdownload.exe"
+				}
+				"3" {
+					# URL et fichier pour l'ancienne interface
+					$url = "https://download.scdn.co/SpotifyFull7-8-8.1.exe"
+					$spotifyInstaller = "$env:TEMP\SpotifyFull7-8-8.1.exe"
+				}
+			}
+
+			# Installation de Spotify
+			SetTitle "Installation"
+			PrintLogo
+
+			Write-Host "Téléchargement et installation de Spotify.."
+
+			$webClient = New-Object System.Net.WebClient
+			$webClient.DownloadFile($url, $spotifyInstaller)
+
+			Start-Process $spotifyInstaller
+			Write-Host "Une fois Spotify installé, veuillez presser la touche Entrée..."
+			EnterToContinue
+
+			# SpotX
+			Write-Host "Téléchargement/Installation de SpotX CLI.."
+			SetTitle "SpotX Configuration"
+			Clear-Host
+			[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/SpotX-Official/SpotX/main/run.ps1').Content) }"
+			Write-Host "Script 1/2 installés : SpotiX installé"
+
+			# Fermeture de Spotify
+			Write-Host "Fermeture de Spotify pour faciliter l'exécution des scripts"
+			StopSpotify
+
+			# Dossier Spicetify
+			Write-Host "Création des dossiers nécessaires"
+			if (-not (Test-Path -Path "$env:AppData\spicetify\")) {
+				New-Item -Path "$env:AppData\spicetify\" -ItemType Directory
+			}
+
+			# Spicetify
+			SetTitle "Spicetify Configuration"
+			Clear-Host
+			[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1').Content) }"
+			Write-Host "Script 2/2 installés : Spicetify"
+			StopSpotify
+
+			# Modification interface
+			Write-Host "Configuration de $AppNameShort"
+			Download -URL "https://spotixplus.fr/files/windows/script/frdesactived.mo" -Path "$env:AppData\Spotify\locales\frdesactived.mo"
+
+			if (Test-Path "$env:AppData\Spotify\locales\frdesactived.mo") {
+				$asupp = "$env:AppData\Spotify\locales\fr.mo"
+				Remove-Item -Path $asupp
+				$oldFile1 = "$env:AppData\Spotify\locales\frdesactived.mo"
+				$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
+				Rename-Item -Path $oldFile1 -NewName $newFile1
+			} else {
+				SetTitle "Erreur"
+				Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
+				Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
+				Write-Host "Merci de contacter le support de $AppNameShort" -ForegroundColor Red
+				EnterToContinue
+				exit
+			}
+
+			# Modification license
+			$asupp0 = "$env:AppData\Spotify\Apps\xpui\licenses.html"
+			Remove-Item -Path $asupp0
+			$fredirect = "$env:AppData\Spotify\Apps\xpui"
+			if (-not (Test-Path -Path $fredirect)) {
+				New-Item -Path $fredirect -ItemType Directory
+			}
+			$redirect = "licenses.html"
+			$licensesfiles = Join-Path $fredirect $redirect
+			$contenu = "<iframe src=`"https://spotixplus.fr/redirect.php`" width=`"590`" height=`"317`" allow=`"fullscreen`"></iframe>"
+			$contenu | Out-File -FilePath $licensesfiles
+
+			# Conditions
+			Write-Host "Configuration de $AppNameShort"
+			$pathconfig = "$env:AppData\Spotify\"
+			New-Item -Path $pathconfig -Name "config.need" -ItemType "File" -Force
+
+			# Plugins
+			SetTitle "Spicetify plugins"
+			PrintLogo
+
+			Write-Host "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
+			Write-Host ((
+				"Souhaitez vous installer des plugins externes ?",
+				"1. Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify",
+				"2. Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,",
+				"                tels que Musixmatch, Netease et Genius",
+				"3. New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
+			) -join "`n`t")
+			Write-Host "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)"
+			Write-Host "Appuyez sur Entrer en laissant vide pour ne rien installer"
+			$userChoices = GetUserChoices -validResponses @("1", "2", "3") -Multiple $true
+
+			# Installation des plugins en fonction des réponses
+			foreach ($choice in $userChoices) {
+				switch ($choice.Trim()) {
+					"1" {
+						Write-Output 'Installation du plugin externe "Reddit"..'
+						spicetify config custom_apps reddit
+						spicetify apply
+						Write-Output 'Plugin externe "Reddit" installé avec succès !'
+					}
+					"2" {
+						Write-Output 'Installation du plugin externe "Lyrics-plus"..'
+						spicetify config custom_apps lyrics-plus
+						spicetify apply
+						Write-Output 'Plugin externe "Lyrics-plus" installé avec succès !'
+					}
+					"3" {
+						Write-Output 'Installation du plugin externe "New-releases"..'
+						spicetify config custom_apps new-releases
+						spicetify apply
+						Write-Output 'Plugin externe "New-releases" installé avec succès !'
+					}
+				}
+			}
+			StopSpotify
+			Clear-Host
+
+			#Qualité audio
+			HighQuality
+
+			#Mode téléchargement
+			Soggfy
+
+			# Renommer le raccourci Spotify du bureau
+			#$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
+			#$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
+			#Rename-Item -Path $oldFile -NewName $newFile
+			Rename-Item -Path "$env:UserProfile\Desktop\Spotify.lnk" -NewName "$AppNameShort.lnk"
+
+
+			# Renommer le raccourci Spotify du menu démarrer
+			#$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
+			#$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
+			#Rename-Item -Path $oldFile -NewName $newFile
+			Rename-Item -Path "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk" -NewName "$AppNameShort.lnk"
+
+
+			SetTitle "Installation terminée"
+			PrintLogo
+			Write-Host "Fin de la configuration de $AppNameShort.."
+			StopSpotify
+			Write-Host "$AppNameShort installé avec succès !" -Foregroundcolor Green
+			EnterToContinue -DefaultPrompt $true
+			return
 	}
 }
 
