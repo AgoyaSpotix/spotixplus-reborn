@@ -31,28 +31,6 @@ $Logo = "
 # Paramètres PowerShell
 $ErrorActionPreference = "Continue"
 
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-
-public class WinAPI {
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
-}
-"@ -Language CSharp
-Start-Sleep -Milliseconds 500
-$hWnd = [WinAPI]::GetForegroundWindow()
-$X = 500      # Position X (à partir du coin gauche de l'écran)
-$Y = 300      # Position Y (à partir du haut de l'écran)
-$Width = 1500 # Largeur de la fenêtre
-$Height = 800 # Hauteur de la fenêtre
-
-[WinAPI]::MoveWindow($hWnd, $X, $Y, $Width, $Height, $true)
-
-
 function EnterToContinue {
 	param (
 		[bool] $DefaultPrompt = $false
@@ -265,12 +243,58 @@ function InstallDev {
 	EnterToContinue
 }
 
+# Désinstaller Spotify (UWP)
+function Msstore {
+	PrintLogo
+	$spotifymsstore = Get-AppxPackage -Name "SpotifyAB.SpotifyMusic"
+	if ($spotifymsstore) {
+		Write-Host "Une version de Spotify venant du Microsoft Store (UWP) a été détectée. (Version : $($spotifymsstore.Version))" -ForegroundColor Yellow
+		Write-Host "Cette version peut être utilisée en paralèle de Spotix+ Reborn, mais cela crééra deux versions de Spotify sur votre système."
+		$confirmation3 = Read-Host -Prompt "Voulez-vous la désinstaller ? (Vous devez être administrateur !) (Y/N)"
+		if ($confirmation3 -eq "Y") {
+			Write-Host "Désinstalltion de Spotify UWP $($spotifymsstore.Version)..."
+			Start-Process "powershell.exe" -ArgumentList "-NoProfile -Command `"Get-AppxPackage -Name 'SpotifyAB.SpotifyMusic' | Remove-AppxPackage`"" -Wait -Verb RunAs
+			Start-Sleep -Seconds 2
+			$spotifymsstore = Get-AppxPackage -Name "SpotifyAB.SpotifyMusic"
+			if ($spotifymsstore) {
+				Write-Host "La désinstalltion à échoué. " -Foregroundcolor Red
+				# En cas d'échec de la désinstallation
+				$confirmation4 = Read-Host -Prompt "Réessayer ? (Y/N)"
+				if ($confirmation4 -eq "Y") {
+					Msstore
+				} else {
+					Write-Host "Le script va continuer..."
+					Start-Sleep -Seconds 2
+					Install
+					Main
+				}
+			} else {
+				Write-Host "Spotify UWP a été désinstallé avec succès ! " -ForegroundColor Green
+				Read-Host "Appuiez sur Entrée pour continuer..."
+				Install
+				Main
+			}
+
+		} else {
+			Write-Host "Le script va continuer..."
+			Start-Sleep -Seconds 2
+			Install
+			Main
+		}
+
+	} else {
+		Install
+		Main
+	}
+
+}
+
 function Install {
 	# Installation
 	PrintLogo
-	# Détection d'une installation de Spotify
+	# Détection d'une installation de Spotify (Win32)
 	if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
-		Write-Host "Une installation de Spotify a été détectée. Pour le bon fonctionnement du script, vous devez la désinstaller." -ForegroundColor Yellow
+		Write-Host "Une installation de Spotify incompatible a été détectée. Pour le bon fonctionnement du script, vous devez la désinstaller." -ForegroundColor Yellow
 		Write-Host "Nous pouvons le faire pour vous." -ForegroundColor Yellow
 		$confirmation1 = Read-Host -Prompt "Voulez-vous désinstaller Spotify ? (Y/N)"
 		if ($confirmation1 -eq "Y") {
@@ -479,13 +503,20 @@ function Uninstall {
 	if ($confirmation -eq "Y") {
 		SetTitle "Désinstallation"
 		StopSpotify
-		Write-Host "Désinstallation de $AppNameShort.."
+		Write-Host "Lancement de la désinstallation de $AppNameShort.."
 
 		# Suppression des dossiers/fichiers
+		Write-Host "Désinstallation de Spotify..."
+		Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
+		if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
+			Write-Host "La désinstallation de Spotify a échouée ou a été annulée. Retour au menu principal." -Foregroundcolor Red
+			Read-Host "Appuyez sur Entrée "
+			Main
+		}
 		Write-Host "Suppresion de Spicetify.."
 		RemoveIfExists "$env:AppData\spicetify"
 
-		Write-Host "Suppresion de Spotify.."
+		Write-Host "Suppresion des résidus de Spotify.."
 
 		$prefs = "$env:AppData\Spotify\prefs"
 		if (Test-Path -Path $prefs) {
@@ -495,19 +526,22 @@ function Uninstall {
 		if (Test-Path -Path $tmp) {
 			Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $false
 		}
-
+		
+		Write-Host "Suppresion de SpotX.."
 		RemoveIfExists "$env:AppData\Spotify"
 		RemoveIfExists "$env:LocalAppData\Spotify"
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
 		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
-		RemoveIfExists "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe"
+
+		Write-Host "Suppression de Soggfy..."
+		RemoveIfExists "$env:LocalAppData/Soggfy"
 
 		Write-Host "$AppNameShort désinstallé avec succès !"
 		EnterToContinue -DefaultPrompt $true
 		return
 	} else {
-		Write-Host "Annulation.."
-		EnterToContinue -DefaultPrompt $true
+		Write-Host "Annulation..."
+		Start-Sleep -Seconds 3
 		return
 	}
 }
@@ -712,7 +746,7 @@ function Main {
 	# Exécute les commandes en fonction des réponses
 	switch ($userChoices0.Trim()) {
 		"1" {
-			Install
+			Msstore
 			Main
 		}
 		"2" {
@@ -738,6 +772,8 @@ function Main {
 			Main
 		}
 		"7" {
+			Write-Host "A bientôt !"
+			Start-Sleep -Seconds 1
 			Stop-Transcript
 			exit
 		}
@@ -756,7 +792,7 @@ function CheckUpdate {
 	PrintLogo
 	Write-Host "Une mise à jour du script à été trouvée"
 	Write-Host "v$Version -> $latestVersion"
-	$confirmation = Read-Host -Prompt "Voulez-vous la télécharger ? Cela est fortement recommandé.(Y/N)"
+	$confirmation = Read-Host -Prompt "Voulez-vous la télécharger ? Cela est fortement recommandé. (Y/N)"
 	if ($confirmation -eq "N") { return }
 
 	Invoke-WebRequest "https://github.com/AgoyaSpotix/spotixplus-reborn-windows/releases/download/$latestVersion/script.ps1" -OutFile $PSCommandPath
