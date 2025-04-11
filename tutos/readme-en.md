@@ -28,7 +28,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 ```
 You should now be able to launch the script !
 
-## I got other bugs !
+## I've got other bugs !
 Watch in the [Issues](https://github.com/AgoyaSpotix/spotixplus-reborn/issues) tab if someone has the same bug as you, if so send a response saying you also have it.\
 Otherwise report it yourself.\
 
