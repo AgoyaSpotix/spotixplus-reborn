@@ -3,6 +3,7 @@ $AppNameShort = "SpotiX+ Reborn"
 $AppName = "$AppNameShort PC Script"
 $Version = "1.5"
 $ByPassAdmin = $false
+$NoTranslations = $false
 
 $GithubUser = "AgoyaSpotix"
 $GithubRepo = "spotixplus-reborn"
@@ -31,12 +32,437 @@ $Logo = "
 # Paramètres PowerShell
 $ErrorActionPreference = "Continue"
 
+$localizations = @"
+{
+	"languages_default_regions": {
+		"fr": "fr-FR",
+		"en": "en-US"
+	},
+	"translations": {
+		"enter-to-continue": {
+			"fr-FR": "Appuyez sur Entrée pour continuer...",
+			"en-US": "Press Enter to continue..."
+		},
+		"downloading": {
+			"fr-FR": "Téléchargement en cours",
+			"en-US": "Downloading"
+		},
+		"percentage-done": {
+			"fr-FR": "complet",
+			"en-US": "done"
+		},
+		"loading": {
+			"fr-FR": "Chargement",
+			"en-US": "Loading"
+		},
+		"error": {
+			"fr-FR": "Erreur",
+			"en-US": "Error"
+		},
+		"powershell-7-not-installed": {
+			"fr-FR": "PowerShell 7 n'est pas installé sur ce système. Ce dernier est nécessaire pour utiliser $AppNameShort.`nSouhaitez-vous l'installer ? (Y/N)",
+			"en-US": "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ? (Y/N)"
+		},
+		"powershell-7-download-starting": {
+			"fr-FR": "Lancement du téléchargement de PowerShell `$powershellLatestVersion...",
+			"en-US": "Download starting for PowerShell `$powershellLatestVersion..."
+		},
+		"powershell-7-download-finished": {
+			"fr-FR": "Téléchargement terminé. Lancement de l'installation...",
+			"en-US": "Download finished, installing..."
+		},
+		"powershell-7-installation-prompt": {
+			"fr-FR": "Une fois l'installation terminée, appuyez sur Entrée...",
+			"en-US": "Once the installation is over, press Enter..."
+		},
+		"powershell-7-error-installing": {
+			"fr-FR": "Une erreur est survenue lors de l'installation.",
+			"en-US": "An error occured during the installation."
+		},
+		"powershell-7-error-downloading": {
+			"fr-FR": "Une erreur est survenue lors du téléchargement.",
+			"en-US": "An error occured during the downloading."
+		},
+		"close-window-prompt": {
+			"fr-FR": "Vous pouvez fermer cette fenêtre en appuyant sur Entrée.",
+			"en-US": "You can close this window by pressing Enter."
+		},
+		"script-move": {
+			"fr-FR": "Déplacement du script a cette adresse : `$newScriptPath",
+			"en-US": "Moving the script at this path : `$newScriptPath"
+		},
+		"script-launch": {
+			"fr-FR": "Lancement du script...",
+			"en-US": "Launching the script..."
+		},
+		"no-admin-check": {
+			"fr-FR": "Pour pouvoir faire fonctionner correctement le script, celui-ci ne dois pas être lancé en tant qu'administrateur.`nVeuillez redémarrer le script normalement.",
+			"en-US": "For the script to work properly, it shouldn't be launched as an administrator.`nPlease restart the scropt normally."
+		},
+		"online-mode-skip-update": {
+			"fr-FR": "Lancé en ligne, pas de vérification de mises à jour",
+			"en-US": "Launched in online mode, no checks for updates"
+		},
+		"update-found": {
+			"fr-FR": "Une mise à jour du script à été trouvée",
+			"en-US": "An update has been found for the script"
+		},
+		"update-prompt": {
+			"fr-FR": "Voulez-vous la télécharger ? Cela est fortement recommandé. (Y/N)",
+			"en-US": "Would you like to download it ? It is strongly recommended. (Y/N)"
+		},
+		"update-downloaded": {
+			"fr-FR": "Mise à jour téléchargée`nAppuyez sur Entrée pour relancer le script mis à jour...",
+			"en-US": "Update downloaded`nPress Enter to restart the updated script..."
+		},
+		"lobby": {
+			"fr-FR": "Accueil",
+			"en-US": "Lobby"
+		},
+		"lobby-third-party-apps": {
+			"fr-FR": "Apps tierces utilisées: SpotX CLI, Spicetify, Soggfy",
+			"en-US": "Third party apps used : SpotX CLI, Spicetify, Soggfy"
+		},
+		"lobby-warning": {
+			"fr-FR": "ATTENTION: Ce script utilise votre connexion internet pour fonctionner correctement.`nNe désactivez pas votre connexion internet pendant l'exécution du script.",
+			"en-US": "WARNING : This script uses your Internet connexion to work properly.`nDo not disable your internet connexion during the execution of the script."
+		},
+		"lobby-menu": {
+			"fr-FR": "Que voulez-vous faire ?",
+			"en-US": "What do you want to do ?"
+		},
+		"lobby-menu1": {
+			"fr-FR": "Installer $AppNameShort",
+			"en-US": "Download $AppNameShort"
+		},
+		"lobby-menu2": {
+			"fr-FR": "Activer/Désactiver la qualité très élevée",
+			"en-US": "Enable/Disable high quality"
+		},
+		"lobby-menu3": {
+			"fr-FR": "Activer la fonctionnalité de téléchargement",
+			"en-US": "Enable the download feature"
+		},
+		"lobby-menu4": {
+			"fr-FR": "Désinstaller $AppNameShort",
+			"en-US": "Uninstall $AppNameShort"
+		},
+		"lobby-menu5": {
+			"fr-FR": "Ouvrir la page GitHub",
+			"en-US": "Open GitHub Webpage"
+		},
+		"lobby-menu6": {
+			"fr-FR": "Rejoindre notre serveur Discord",
+			"en-US": "Join our Discord server"
+		},
+		"lobby-menu7": {
+			"fr-FR": "Fermer le script",
+			"en-US": "Close the script"
+		},
+		"lobby-menu5-openning-github": {
+			"fr-FR": "Ouverture de la page GitHub...",
+			"en-US": "Openning the GitHub Webpage..."
+		},
+		"lobby-menu6-openning-discord": {
+			"fr-FR": "Ouverture du lien d'invitation Discord...",
+			"en-US": "Openning the Discord join link..."
+		},
+		"lobby-menu7-goodbye": {
+			"fr-FR": "A bientôt !",
+			"en-US": "See you soon !"
+		},
+		"msstore-check-found": {
+			"fr-FR": "Une version de Spotify venant du Microsoft Store (UWP) a été détectée. (Version : `$ms_version)"
+		},
+		"msstore-check-warning": {
+			"fr-FR": "Cette version peut être utilisée en paralèle de $AppNameShort, mais cela crééra deux versions de Spotify sur votre système."
+		},
+		"msstore-check-prompt": {
+			"fr-FR": "Voulez-vous la désinstaller ? (Vous devez être administrateur !) (Y/N)"
+		},
+		"msstore-check-uninstalling": {
+			"fr-FR": "Désinstalltion de Spotify UWP `$ms_version..."
+		},
+		"msstore-check-uninstall-failed": {
+			"fr-FR": "La désinstalltion à échoué."
+		},
+		"retry": {
+			"fr-FR": "Réessayer ? (Y/N)"
+		},
+		"script-will-continue": {
+			"fr-FR": "Le script va continuer..."
+		},
+		"msstore-check-uninstalled-successfully": {
+			"fr-FR": "Spotify UWP a été désinstallé avec succès !"
+		},
+		"spotify-check-found": {
+			"fr-FR": "Une installation de Spotify incompatible a été détectée. Pour le bon fonctionnement du script, vous devez la désinstaller.`nNous pouvons le faire pour vous."
+		},
+		"spotify-check-prompt": {
+			"fr-FR": "Voulez-vous désinstaller Spotify ? (Y/N)"
+		},
+		"spotify-check-uninstalling": {
+			"fr-FR": "Lancement de la désinstallation de Spotify..."
+		},
+		"spotify-check-uninstalling-failed": {
+			"fr-FR": "La désinstallation de Spotify a échoué. Appuyez sur Entrée pour recommencer..."
+		},
+		"spotify-check-uninstall-successful": {
+			"fr-FR": "Spotify a correctement été désinstallé !"
+		},
+		"spotify-check-uninstall-successful-continue": {
+			"fr-FR": "Le script va continuer..."
+		},
+		"spotify-check-returning": {
+			"fr-FR": "Impossible d'installer $AppNameShort. Retour au menu principal dans 3 secondes..."
+		},
+		"app-install-version-choice-prompt": {
+			"fr-FR": "Quelle version de Spotify souhaitez-vous ?"
+		},
+		"app-install-version-choice-version1": {
+			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable"
+		},
+		"app-install-version-choice-version2": {
+			"fr-FR": "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible"
+		},
+		"app-install-version-choice-version3": {
+			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable"
+		},
+		"app-install-version-choice-more-info": {
+			"fr-FR": "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)"
+		},
+		"installation": {
+			"fr-FR": "Installation",
+			"en-US": "Installation"
+		},
+		"downloading-and-installing": {
+			"fr-FR": "Téléchargement et installation de Spotify..."
+		},
+		"spotify-install-prompt": {
+			"fr-FR": "Une fois Spotify installé, veuillez presser la touche Entrée..."
+		},
+		"spotx-cli-download": {
+			"fr-FR": "Téléchargement/Installation de SpotX CLI..."
+		},
+		"spotx-configuration": {
+			"fr-FR": "SpotX Configuration"
+		},
+		"spotx-installed": {
+			"fr-FR": "Script 1/2 installés : SpotiX installé"
+		},
+		"spotify-closing": {
+			"fr-FR": "Fermeture de Spotify pour faciliter l'exécution des scripts"
+		},
+		"creating-necessary-folder": {
+			"fr-FR": "Création des dossiers nécessaires"
+		},
+		"spicetify-configuration": {
+			"fr-FR": "Configuration de Spicetify",
+			"en-US": "Spicetify Configuration"
+		},
+		"spicetify-installed": {
+			"fr-FR": "Script 2/2 installés : Spicetify"
+		},
+		"app-configuration": {
+			"fr-FR": "Configuration de $AppNameShort"
+		},
+		"download-app-files": {
+			"fr-FR": "Une erreur s'est produite durant le téléchargement des fichiers nécessaires`nNe retentez pas de lancer le script, cela pourrait générer des conflits`nMerci de contacter le support de $AppNameShort"
+		},
+		"spicetify-plugins": {
+			"fr-FR": "Plugins Spicetify",
+			"en-US": "Spicetify plugins"
+		},
+		"spicetify-plugins-prompt": {
+			"fr-FR": "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
+		},
+		"spicetify-plugins-prompt-2": {
+			"fr-FR": "Souhaitez vous installer des plugins externes ?"
+		},
+		"spicetify-plugins-plugin-1": {
+			"fr-FR": "Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify"
+		},
+		"spicetify-plugins-plugin-2": {
+			"fr-FR": "Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,`n                tels que Musixmatch, Netease et Genius"
+		},
+		"spicetify-plugins-plugin-3": {
+			"fr-FR": "New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
+		},
+		"spicetify-plugins-prompt-3": {
+			"fr-FR": "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)`nAppuyez sur Entrer en laissant vide pour ne rien installer"
+		},
+		"spicetify-plugin-reddit-installing": {
+			"fr-FR": "Installation du plugin externe \"Reddit\"..."
+		},
+		"spicetify-plugin-reddit-installing-success": {
+			"fr-FR": "Plugin externe \"Reddit\" installé avec succès !"
+		},
+		"spicetify-plugin-lyricsplus-installing": {
+			"fr-FR": "Installation du plugin externe \"Lyrics-plus\"..."
+		},
+		"spicetify-plugin-lyricsplus-installing-success": {
+			"fr-FR": "Plugin externe \"Lyrics-plus\" installé avec succès !"
+		},
+		"spicetify-plugin-newreleases-installing": {
+			"fr-FR": "Installation du plugin externe \"New-releases\"..."
+		},
+		"spicetify-plugin-newreleases-installing-success": {
+			"fr-FR": "Plugin externe \"New-releases\" installé avec succès !"
+		},
+		"install-finished": {
+			"fr-FR": "Installation terminée"
+		},
+		"configuration-finished": {
+			"fr-FR": "Fin de la configuration de $AppNameShort..."
+		},
+		"install-successful": {
+			"fr-FR": "$AppNameShort installé avec succès !"
+		},
+		"uninstall-app-not-found": {
+			"fr-FR": "Vous ne pouvez pas déinstaller $AppNameShort car celui-ci n'est pas installé."
+		},
+		"uninstall-app-confirmation": {
+			"fr-FR": "Êtes vous sûr de vouloir désinstaller $AppNameShort et tout ses composants ? (Y/N)"
+		},
+		"uninstalling": {
+			"fr-FR": "Désinstallation"
+		},
+		"uninstall-starting": {
+			"fr-FR": "Lancement de la désinstallation de $AppNameShort..."
+		},
+		"spotify-uninstall": {
+			"fr-FR": "Désinstallation de Spotify..."
+		},
+		"spotify-uninstall-fail": {
+			"fr-FR": "La désinstallation de Spotify a échouée ou a été annulée. Appuyez sur Entrée pour retourner au menu principal..."
+		},
+		"spicetify-uninstalling": {
+			"fr-FR": "Suppresion de Spicetify..."
+		},
+		"spotify-uninstall-complete": {
+			"fr-FR": "Suppresion des résidus de Spotify..."
+		},
+		"spotx-uninstall": {
+			"fr-FR": "Suppresion de SpotX..."
+		},
+		"soggfy-uninstall": {
+			"fr-FR": "Suppression de Soggfy..."
+		},
+		"app-uninstalled-successfully": {
+			"fr-FR": "$AppNameShort désinstallé avec succès !"
+		},
+		"cancelling": {
+			"fr-FR": "Annulation..."
+		},
+		"audio-configuration": {
+			"fr-FR": "Configuration Audio",
+			"en-US": "Audio Configuration"
+		},
+		"app-installed-check": {
+			"fr-FR": "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
+		},
+		"audio-warning": {
+			"fr-FR": "ATTENTION: ne démarrez pas $AppNameShort pendant ce processus, cela pourrait engendrer des conflits"
+		},
+		"audio-prompt": {
+			"fr-FR": "Quelle qualité audio souhaitez-vous ?"
+		},
+		"audio-high": {
+			"fr-FR": "Qualité très élevée"
+		},
+		"audio-low": {
+			"fr-FR": "Qualité basique (réglable depuis $AppNameShort)"
+		},
+		"audio-high-configuration": {
+			"fr-FR": "Configuration de la qualité très élevée"
+		},
+		"audio-error": {
+			"fr-FR": "Une erreur s'est produite durant le téléchargement des fichiers nécessaires.`nNe retentez pas de lancer le script, cela pourrait faire des conflits`nMerci de contacter le support de $AppNameShort"
+		},
+		"closing-window": {
+			"fr-FR": "Fermeture de la fenêtre..."
+		},
+		"audio-high-done": {
+			"fr-FR": "La qualité très élevée est appliquée !"
+		},
+		"audio-low-configuration": {
+			"fr-FR": "Suppresion de la qualité très élévée"
+		},
+		"audio-low-done": {
+			"fr-FR": "La qualité très élevée a été supprimée avec succès !"
+		},
+		"soggfy": {
+			"fr-FR": "Fonctionnalité de téléchargement"
+		},
+		"soggfy-already-installed": {
+			"fr-FR": "Le mode téléchargement est déjà activé pour $AppNameShort"
+		},
+		"soggfy-compatible-versions": {
+			"fr-FR": "Voici les versions compatible avec la fonctionnalitée de téléchargement:"
+		},
+		"soggfy-compatible-versions-v1": {
+			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Mode téléchargement instable"
+		},
+		"soggfy-compatible-versions-v2": {
+			"fr-FR": "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Mode téléchargement compatible"
+		},
+		"soggfy-compatible-versions-v3": {
+			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Mode téléchargement instable"
+		},
+		"soggfy-warning": {
+			"fr-FR": "Le fonctionnement du mode téléchargement n'est pas garanti sur les versions \"instables\".`nIl est tout de même possible que cela fonctionne, n'hésitez pas à tester !"
+		},
+		"soggfy-speech": {
+			"fr-FR": "La fonctionnalité de téléchargement permet de télécharger vos musiques préférées juste en les écoutant !`nIl suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement enregistrée.`nVos musiques téléchargées seront disponible dans votre dossier Musique, puis Soggfy.`nPour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/tutos/tuto-telechargement.md"
+		},
+		"soggfy-confirm": {
+			"fr-FR": "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)"
+		},
+		"installing-necessary-files": {
+			"fr-FR": "Installation des fichiers nécessaire"
+		},
+		"installing-ffmpeg": {
+			"fr-FR": "Installation de FFMPEG"
+		},
+		"soggfy-success": {
+			"fr-FR": "La fonctionnalité de téléchargement est installée avec succès !"
+		}
+	}
+}
+"@ | ConvertFrom-Json -AsHashtable
+$language_id = (Get-Culture).Name
+$language_id_defaulted = $localizations["languages_default_regions"][$language_id.Substring(0, 2)]
+
+function GetTranslation {
+	param (
+		[string] $string_id
+	)
+	# No such string ID
+	if ($NoTranslations -or -not $localizations["translations"].ContainsKey($string_id)) {
+		return $string_id
+	}
+	# Language found
+	if ($localizations["translations"][$string_id].ContainsKey($language_id)) {
+		return $localizations["translations"][$string_id][$language_id]
+	}
+	# Language for default region found
+	if ($localizations["translations"][$string_id].ContainsKey($language_id_defaulted)) {
+		return $localizations["translations"][$string_id][$language_id_defaulted]
+	}
+	# Defaults to en-US
+	if ($localizations["translations"][$string_id].ContainsKey("en-US")) {
+		return $localizations["translations"][$string_id]["en-US"]
+	}
+	# No translations found for this string ID
+	return $string_id
+}
+
 function EnterToContinue {
 	param (
 		[bool] $DefaultPrompt = $false
 	)
 	if ($DefaultPrompt) {
-		Write-Host "Appuyez sur Entrée pour continuer..." -NoNewLine
+		Write-Host (GetTranslation "enter-to-continue") -NoNewLine
 	}
 	$Host.UI.ReadLine()
 }
@@ -87,7 +513,7 @@ function Download {
 		$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
 		$percentComplete = ($totalBytesReceived / $totalBytes) * 100
 		Clear-Host
-		Write-Progress -Activity "Téléchargement en cours" -Status "$([math]::Round($percentComplete, 2))% complet" -PercentComplete $percentComplete
+		Write-Progress -Activity (GetTranslation "downloading") -Status "$([math]::Round($percentComplete, 2))% $(GetTranslation "percentage-done")" -PercentComplete $percentComplete
 	}
 
 	$responseStream.Close()
@@ -95,7 +521,7 @@ function Download {
 }
 
 # Titre fenêtre
-SetTitle "Chargement"
+SetTitle (GetTranslation "loading")
 
 # Change de répertoire
 if ($PSScriptRoot) {
@@ -136,10 +562,10 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 	$powershellPath = GetPowershellPath
 
 	if (-not $powershellPath) {
-		SetTitle "Erreur"
+		SetTitle (GetTranslation "error")
 		Clear-Host
-		Write-Host "PowerShell 7 n'est pas installé sur ce système. Ce dernier est nécessaire pour utiliser Spotix+ Reborn." -ForegroundColor Red
-		$confirmation = Read-Host -Prompt "Souhaitez-vous installer PowerShell 7 ? (Y/N)"
+		Write-Host (GetTranslation "powershell-7-not-installed") -ForegroundColor Red
+		$confirmation = Read-Host -Prompt ""
 
 		if ($confirmation -eq "Y") {
 			# Installation de PowerShell 7
@@ -148,7 +574,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 
 			SetTitle "PowerShell $powershellLatestVersion"
 			Clear-Host
-			Write-Host "Lancement du téléchargement de PowerShell $powershellLatestVersion..." -ForegroundColor Green
+			Write-Host (GetTranslation "powershell-7-download-starting").Replace("`$powershellLatestVersion", $powershellLatestVersion) -ForegroundColor Green
 			$url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
 			$fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
 
@@ -156,41 +582,41 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 			$webClient.DownloadFile($url, $fichierLocal)
 
 			if (Test-Path $fichierLocal) {
-				Write-Host "Téléchargement terminé. Lancement de l'installation..." -ForegroundColor Green
+				Write-Host (GetTranslation "powershell-7-download-finished") -ForegroundColor Green
 				Start-Process $fichierLocal
-				Write-Host "Une fois l'installation terminée, appuyez sur Entrée..." -ForegroundColor Green
+				Write-Host (GetTranslation "powershell-7-installation-prompt") -ForegroundColor Green
 				EnterToContinue
 				$powershellPath = GetPowershellPath
 				if (-not $powershellPath) {
-					Write-Host "Une erreur est survenue lors de l'installation." -ForegroundColor Red
+					Write-Host (GetTranslation "powershell-7-error-installing") -ForegroundColor Red
 					EnterToContinue -DefaultPrompt $true
 					Stop-Transcript
 					exit
 				}
 			} else {
-				Write-Host "Une erreur est survenue lors du téléchargement." -ForegroundColor Red
+				Write-Host (GetTranslation "powershell-7-error-downloading") -ForegroundColor Red
 				EnterToContinue -DefaultPrompt $true
 				Stop-Transcript
 				exit
 			}
 		} else {
 			Clear-Host
-			Write-Host "Vous pouvez fermer cette fenêtre en appuyant sur Entrée." -ForegroundColor Yellow -NoNewLine
+			Write-Host (GetTranslation "close-window-prompt") -ForegroundColor Yellow -NoNewLine
 			EnterToContinue -DefaultPrompt $true
 			Stop-Transcript
 			exit
 		}
 	}
 
-	Write-Host "Chargement..." -ForegroundColor Yellow
+	Write-Host "$(GetTranslation "loading")..." -ForegroundColor Yellow
 	$scriptPath = $MyInvocation.MyCommand.Path
-	if ($scriptPath -match "AppData\\Local\\Temp") {
+	if ($scriptPath -match "$env:LocalAppData\Temp") {
 		if (-Not (Test-Path $log_dir)) {
 			New-Item -Path $log_dir -ItemType Directory -Force
 		}
 		$newScriptPath = Join-Path $log_dir (Split-Path -Leaf $scriptPath)
-		Write-Host "Déplacement du script a cette adresse : $newScriptPath" -ForegroundColor Yellow
-		Write-Host "Lancement du script.." -ForegroundColor Yellow
+		Write-Host (GetTranslation "script-move").Replace("`$newScriptPath", $newScriptPath) -ForegroundColor Yellow
+		Write-Host (GetTranslation "script-launch") -ForegroundColor Yellow
 		Copy-Item -Path $scriptPath -Destination $newScriptPath -Force
 		$scriptPath = $newScriptPath
 	}
@@ -201,8 +627,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 
 # Verification admin ou pas
 if ((-not $ByPassAdmin) -and ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-	Write-Host "Pour pouvoir faire fonctionner correctement le script, celui-ci ne dois pas être lancé en administrateur." -ForegroundColor Red
-	Write-Host "Veuillez redémarrer le script normalement." -ForegroundColor Red
+	Write-Host (GetTranslation "no-admin-check") -ForegroundColor Red
 	EnterToContinue -DefaultPrompt $true
 	exit 1
 }
@@ -248,35 +673,35 @@ function Msstore {
 	PrintLogo
 	$spotifymsstore = Get-AppxPackage -Name "SpotifyAB.SpotifyMusic"
 	if ($spotifymsstore) {
-		Write-Host "Une version de Spotify venant du Microsoft Store (UWP) a été détectée. (Version : $($spotifymsstore.Version))" -ForegroundColor Yellow
-		Write-Host "Cette version peut être utilisée en paralèle de Spotix+ Reborn, mais cela crééra deux versions de Spotify sur votre système."
-		$confirmation3 = Read-Host -Prompt "Voulez-vous la désinstaller ? (Vous devez être administrateur !) (Y/N)"
+		Write-Host (GetTranslation "msstore-check-found").Replace("`$ms_version", $spotifymsstore.Version) -ForegroundColor Yellow
+		Write-Host (GetTranslation "msstore-check-warning")
+		$confirmation3 = Read-Host -Prompt (GetTranslation "msstore-check-prompt")
 		if ($confirmation3 -eq "Y") {
-			Write-Host "Désinstalltion de Spotify UWP $($spotifymsstore.Version)..."
+			Write-Host (GetTranslation "msstore-check-uninstalling").Replace("`$ms_version", $spotifymsstore.Version)
 			Start-Process "powershell.exe" -ArgumentList "-NoProfile -Command `"Get-AppxPackage -Name 'SpotifyAB.SpotifyMusic' | Remove-AppxPackage`"" -Wait -Verb RunAs
 			Start-Sleep -Seconds 2
 			$spotifymsstore = Get-AppxPackage -Name "SpotifyAB.SpotifyMusic"
 			if ($spotifymsstore) {
-				Write-Host "La désinstalltion à échoué. " -Foregroundcolor Red
+				Write-Host (GetTranslation "msstore-check-uninstall-failed") -Foregroundcolor Red
 				# En cas d'échec de la désinstallation
-				$confirmation4 = Read-Host -Prompt "Réessayer ? (Y/N)"
+				$confirmation4 = Read-Host -Prompt (GetTranslation "retry")
 				if ($confirmation4 -eq "Y") {
 					Msstore
 				} else {
-					Write-Host "Le script va continuer..."
+					Write-Host (GetTranslation "script-will-continue")
 					Start-Sleep -Seconds 2
 					Install
 					Main
 				}
 			} else {
-				Write-Host "Spotify UWP a été désinstallé avec succès ! " -ForegroundColor Green
-				Read-Host "Appuiez sur Entrée pour continuer..."
+				Write-Host (GetTranslation "msstore-check-uninstalled-successfully") -ForegroundColor Green
+				EnterToContinue -DefaultPrompt $true
 				Install
 				Main
 			}
 
 		} else {
-			Write-Host "Le script va continuer..."
+			Write-Host (GetTranslation "script-will-continue")
 			Start-Sleep -Seconds 2
 			Install
 			Main
@@ -294,36 +719,35 @@ function Install {
 	PrintLogo
 	# Détection d'une installation de Spotify (Win32)
 	if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
-		Write-Host "Une installation de Spotify incompatible a été détectée. Pour le bon fonctionnement du script, vous devez la désinstaller." -ForegroundColor Yellow
-		Write-Host "Nous pouvons le faire pour vous." -ForegroundColor Yellow
-		$confirmation1 = Read-Host -Prompt "Voulez-vous désinstaller Spotify ? (Y/N)"
+		Write-Host (GetTranslation "spotify-check-found") -ForegroundColor Yellow
+		$confirmation1 = Read-Host -Prompt (GetTranslation "spotify-check-prompt")
 		if ($confirmation1 -eq "Y") {
 			# Lancement de la désinstallation
-			Write-Host "Lancement de la désinstallation de Spotify..."
+			Write-Host (GetTranslation "spotify-check-uninstalling")
 			Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
 			if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
-				Write-Host "La désinstallation de Spotify a échoué. Veuillez recommencer." -ForegroundColor Red
-				EnterToContinue -DefaultPrompt $true
+				Write-Host (GetTranslation "spotify-check-uninstalling-failed") -ForegroundColor Red
+				EnterToContinue
 			} else {
-				Write-Host "Spotify a correctement été désinstallé ! " -ForegroundColor Green
-				Write-Host "Le script va continuer..."
+				Write-Host (GetTranslation "spotify-check-uninstall-successful") -ForegroundColor Green
+				Write-Host (GetTranslation "spotify-check-uninstall-successful-continue")
 				Start-Sleep -Seconds 3
 				Install
 				Main
 			}
 		} else {
-			Write-Host "Impossible d'installer Spotix+ Reborn. Retour au menu principal dans 3 secondes..." -ForegroundColor Red
+			Write-Host (GetTranslation "spotify-check-returning") -ForegroundColor Red
 			Start-Sleep -Seconds 3
 			return
-			}
+		}
 	} else {
 			Write-Host ((
-				"Quelle version de Spotify souhaitez-vous ?",
-				"1. Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable",
-				"2. Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible",
-				"3. Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable"
+				(GetTranslation "app-install-version-choice-prompt"),
+				"1. $(GetTranslation "app-install-version-choice-version1")",
+				"2. $(GetTranslation "app-install-version-choice-version2")",
+				"3. $(GetTranslation "app-install-version-choice-version3")"
 			) -join "`n`t")
-			Write-Host "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)"
+			Write-Host (GetTranslation "app-install-version-choice-more-info")
 			$confirmation2 = GetUserChoices -validResponses @("1", "2", "3")
 			switch ($confirmation2.Trim()) {
 				"1"{
@@ -343,27 +767,27 @@ function Install {
 			}
 
 			# Installation de Spotify
-			SetTitle "Installation"
+			SetTitle (GetTranslation "installation")
 			PrintLogo
 
-			Write-Host "Téléchargement et installation de Spotify.."
+			Write-Host (GetTranslation "downloading-and-installing")
 
 			$webClient = New-Object System.Net.WebClient
 			$webClient.DownloadFile($url, $spotifyInstaller)
 
 			Start-Process $spotifyInstaller
-			Write-Host "Une fois Spotify installé, veuillez presser la touche Entrée..."
+			Write-Host (GetTranslation "spotify-install-prompt")
 			EnterToContinue
 
 			# SpotX
-			Write-Host "Téléchargement/Installation de SpotX CLI.."
-			SetTitle "SpotX Configuration"
+			Write-Host (GetTranslation "spotx-cli-download")
+			SetTitle (GetTranslation "spotx-configuration")
 			Clear-Host
 			[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/SpotX-Official/SpotX/main/run.ps1').Content) }"
-			Write-Host "Script 1/2 installés : SpotiX installé"
+			Write-Host (GetTranslation "spotx-installed")
 
 			# Fermeture de Spotify
-			Write-Host "Fermeture de Spotify pour faciliter l'exécution des scripts"
+			Write-Host (GetTranslation "spotify-closing")
 			StopSpotify
 
 			# Dossier Spicetify
@@ -373,14 +797,14 @@ function Install {
 			}
 
 			# Spicetify
-			SetTitle "Spicetify Configuration"
+			SetTitle (GetTranslation "spicetify-configuration")
 			Clear-Host
 			[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1').Content) }"
-			Write-Host "Script 2/2 installés : Spicetify"
+			Write-Host (GetTranslation "spicetify-installed")
 			StopSpotify
 
 			# Modification interface
-			Write-Host "Configuration de $AppNameShort"
+			Write-Host (GetTranslation "app-configuration")
 			Download -URL "https://spotixplus.fr/files/windows/script/frdesactived.mo" -Path "$env:AppData\Spotify\locales\frdesactived.mo"
 
 			if (Test-Path "$env:AppData\Spotify\locales\frdesactived.mo") {
@@ -390,10 +814,8 @@ function Install {
 				$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
 				Rename-Item -Path $oldFile1 -NewName $newFile1
 			} else {
-				SetTitle "Erreur"
-				Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
-				Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
-				Write-Host "Merci de contacter le support de $AppNameShort" -ForegroundColor Red
+				SetTitle (GetTranslation "error")
+				Write-Host (GetTranslation "download-app-files") -ForegroundColor Red
 				EnterToContinue
 				exit
 			}
@@ -411,46 +833,44 @@ function Install {
 			$contenu | Out-File -FilePath $licensesfiles
 
 			# Conditions
-			Write-Host "Configuration de $AppNameShort"
+			Write-Host (GetTranslation "app-configuration")
 			$pathconfig = "$env:AppData\Spotify\"
 			New-Item -Path $pathconfig -Name "config.need" -ItemType "File" -Force
 
 			# Plugins
-			SetTitle "Spicetify plugins"
+			SetTitle (GetTranslation "spicetify-plugins")
 			PrintLogo
 
-			Write-Host "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
+			Write-Host (GetTranslation "spicetify-plugins-prompt")
 			Write-Host ((
-				"Souhaitez vous installer des plugins externes ?",
-				"1. Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify",
-				"2. Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,",
-				"                tels que Musixmatch, Netease et Genius",
-				"3. New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
+				(GetTranslation "spicetify-plugins-prompt-2"),
+				"1. $(GetTranslation "spicetify-plugins-plugin-1")",
+				"2. $(GetTranslation "spicetify-plugins-plugin-2")",
+				"3. $(GetTranslation "spicetify-plugins-plugin-3")"
 			) -join "`n`t")
-			Write-Host "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)"
-			Write-Host "Appuyez sur Entrer en laissant vide pour ne rien installer"
+			Write-Host (GetTranslation "spicetify-plugins-prompt-3")
 			$userChoices = GetUserChoices -validResponses @("1", "2", "3") -Multiple $true
 
 			# Installation des plugins en fonction des réponses
 			foreach ($choice in $userChoices) {
 				switch ($choice.Trim()) {
 					"1" {
-						Write-Output 'Installation du plugin externe "Reddit"..'
+						Write-Output (GetTranslation "spicetify-plugin-reddit-installing")
 						spicetify config custom_apps reddit
 						spicetify apply
-						Write-Output 'Plugin externe "Reddit" installé avec succès !'
+						Write-Output (GetTranslation "spicetify-plugin-reddit-installing-success")
 					}
 					"2" {
-						Write-Output 'Installation du plugin externe "Lyrics-plus"..'
+						Write-Output (GetTranslation "spicetify-plugin-lyricsplus-installing")
 						spicetify config custom_apps lyrics-plus
 						spicetify apply
-						Write-Output 'Plugin externe "Lyrics-plus" installé avec succès !'
+						Write-Output (GetTranslation "spicetify-plugin-lyricsplus-installing-success")
 					}
 					"3" {
-						Write-Output 'Installation du plugin externe "New-releases"..'
+						Write-Output (GetTranslation "spicetify-plugin-lyricsplus-installing")
 						spicetify config custom_apps new-releases
 						spicetify apply
-						Write-Output 'Plugin externe "New-releases" installé avec succès !'
+						Write-Output (GetTranslation "spicetify-plugin-lyricsplus-installing-success")
 					}
 				}
 			}
@@ -477,11 +897,11 @@ function Install {
 			Rename-Item -Path "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk" -NewName "$AppNameShort.lnk"
 
 
-			SetTitle "Installation terminée"
+			SetTitle (GetTranslation "install-finished")
 			PrintLogo
-			Write-Host "Fin de la configuration de $AppNameShort.."
+			Write-Host (GetTranslation "configuration-finished")
 			StopSpotify
-			Write-Host "$AppNameShort installé avec succès !" -Foregroundcolor Green
+			Write-Host (GetTranslation "install-successful") -Foregroundcolor Green
 			EnterToContinue -DefaultPrompt $true
 			return
 	}
@@ -492,31 +912,31 @@ function Uninstall {
 	# Désinstallation
 
 	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
-		SetTitle "Erreur"
-		Write-Host "Vous ne pouvez pas déinstaller $AppNameShort car celui-ci n'est pas installé."
+		SetTitle (GetTranslation "error")
+		Write-Host (GetTranslation "uninstall-app-not-found")
 		EnterToContinue -DefaultPrompt $true
 		return
 	}
 
-	$confirmation = Read-Host -Prompt "Êtes vous sûr de vouloir désinstaller $AppNameShort et tout ses composants ? (Y/N)"
+	$confirmation = Read-Host -Prompt (GetTranslation "uninstall-app-confirmation")
 	PrintLogo
 	if ($confirmation -eq "Y") {
-		SetTitle "Désinstallation"
+		SetTitle (GetTranslation "uninstalling")
 		StopSpotify
-		Write-Host "Lancement de la désinstallation de $AppNameShort.."
+		Write-Host (GetTranslation "uninstall-starting")
 
 		# Suppression des dossiers/fichiers
-		Write-Host "Désinstallation de Spotify..."
+		Write-Host (GetTranslation "spotify-uninstall")
 		Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
 		if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
-			Write-Host "La désinstallation de Spotify a échouée ou a été annulée. Retour au menu principal." -Foregroundcolor Red
-			Read-Host "Appuyez sur Entrée "
+			Write-Host (GetTranslation "spotify-uninstall-fail") -Foregroundcolor Red
+			EnterToContinue
 			Main
 		}
-		Write-Host "Suppresion de Spicetify.."
+		Write-Host (GetTranslation "spicetify-uninstalling")
 		RemoveIfExists "$env:AppData\spicetify"
 
-		Write-Host "Suppresion des résidus de Spotify.."
+		Write-Host (GetTranslation "spotify-uninstall-complete")
 
 		$prefs = "$env:AppData\Spotify\prefs"
 		if (Test-Path -Path $prefs) {
@@ -527,20 +947,20 @@ function Uninstall {
 			Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $false
 		}
 		
-		Write-Host "Suppresion de SpotX.."
+		Write-Host (GetTranslation "spotx-uninstall")
 		RemoveIfExists "$env:AppData\Spotify"
 		RemoveIfExists "$env:LocalAppData\Spotify"
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
 		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
 
-		Write-Host "Suppression de Soggfy..."
+		Write-Host (GetTranslation "soggfy-uninstall")
 		RemoveIfExists "$env:LocalAppData/Soggfy"
 
-		Write-Host "$AppNameShort désinstallé avec succès !"
+		Write-Host (GetTranslation "app-uninstalled-successfully")
 		EnterToContinue -DefaultPrompt $true
 		return
 	} else {
-		Write-Host "Annulation..."
+		Write-Host (GetTranslation "cancelling")
 		Start-Sleep -Seconds 3
 		return
 	}
@@ -548,32 +968,32 @@ function Uninstall {
 
 function HighQuality {
 	# Qualité audio
-	SetTitle "Configuration Audio"
+	SetTitle (GetTranslation "audio-configuration")
 	PrintLogo
 
 	if (-not (Test-Path -Path "$env:AppData\Spotify")) {
-		SetTitle "Erreur"
-		Write-Host "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
+		SetTitle (GetTranslation "error")
+		Write-Host (GetTranslation "app-installed-check")
 		EnterToContinue -DefaultPrompt $true
 		return
 	}
 
 	# Fichier trouvé
-	Write-Host "ATTENTION: ne démarrez pas $AppNameShort pendant ce processus, cela pourrait engendrer des conflits" -ForegroundColor Red
+	Write-Host (GetTranslation "audio-warning") -ForegroundColor Red
 	Write-Host ((
-		"Quelle qualité audio souhaitez-vous ?",
-		"1. Qualité très élevée",
-		"2. Qualité basique (réglable depuis $AppNameShort)",
-		"3. Laisser tel quel"
+		(GetTranslation "audio-prompt"),
+		"1. $(GetTranslation "audio-high")",
+		"2. $(GetTranslation "audio-low")",
+		"3. $(GetTranslation "audio-no-changes")"
 	) -join "`n`t")
 	$userChoices = GetUserChoices -validResponses @("1", "2", "3")
 	PrintLogo
-	SetTitle "Configuration Audio"
+	SetTitle (GetTranslation "audio-configuration")
 
 	switch ($userChoices.Trim()) {
 		"1" {
 			StopSpotify
-			Write-Host "Configuration de la qualité très élevée"
+			Write-Host (GetTranslation "audio-high-configuration")
 			$audioveryhigh = (
 				"audio.sync_bitrate=320000",
 				"audio.play_bitrate=320000"
@@ -597,21 +1017,19 @@ function HighQuality {
 				$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
 				Rename-Item -Path $oldFile1 -NewName $newFile1
 			} else {
-				SetTitle "Erreur"
-				Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
-				Write-Host "Ne retentez pas de lancer le script, cela pourrait générer des conflits" -ForegroundColor Red
-				Write-Host "Merci de contacter le support de SpotiX+ Reborn" -ForegroundColor Red
+				SetTitle (GetTranslation "error")
+				Write-Host (GetTranslation "audio-error") -ForegroundColor Red
 				EnterToContinue
-				Write-Host "Fermeture de la fenêtre.."
+				Write-Host (GetTranslation "closing-window")
 				Stop-Transcript
 				exit
 			}
-			Write-Host "La qualité très élevée est appliquée !"
+			Write-Host (GetTranslation "audio-high-done")
 			EnterToContinue -DefaultPrompt $true
 		}
 		"2" {
 			StopSpotify
-			Write-Host "Suppresion de la qualité très élévée"
+			Write-Host (GetTranslation "audio-low-configuration")
 			$audioveryhigh = (
 				"audio.sync_bitrate=320000",
 				"audio.play_bitrate=320000"
@@ -644,16 +1062,14 @@ function HighQuality {
 				$newFile1 = "$env:AppData\Spotify\locales\fr.mo"
 				Rename-Item -Path $oldFile1 -NewName $newFile1
 			} else {
-				SetTitle "Erreur"
-				Write-Host "Une erreur s'est produite durant le téléchargement des fichiers nécessaires." -ForegroundColor Red
-				Write-Host "Ne retentez pas de lancer le script, cela pourrait faire des conflits" -ForegroundColor Red
-				Write-Host "Merci de contacter le support de SpotiX+" -ForegroundColor Red
+				SetTitle (GetTranslation "error")
+				Write-Host (GetTranslation "audio-error") -ForegroundColor Red
 				EnterToContinue
-				Write-Host "Fermeture de la fenêtre.."
+				Write-Host (GetTranslation "closing-window")
 				Stop-Transcript
 				exit
 			}
-			Write-Host "La qualité très élevée a été supprimée avec succès !"
+			Write-Host (GetTranslation "audio-low-done")
 			EnterToContinue -DefaultPrompt $true
 		}
 	}
@@ -662,44 +1078,40 @@ function HighQuality {
 function Soggfy {
 	#Mode téléchargement
 	Clear-Host
-	SetTitle "Fonctionnalité de téléchargement"
+	SetTitle (GetTranslation "soggfy")
 	PrintLogo
 	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
-		SetTitle "Erreur"
-		Write-Host "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
+		SetTitle (GetTranslation "error")
+		Write-Host (GetTranslation "app-installed-check")
 		EnterToContinue -DefaultPrompt $true
 		return
 	}
 	if (Test-Path -Path "$env:AppData\Spotify\SoggfyUIC.js") {
-		SetTitle "Erreur"
-		Write-Host "Le mode téléchargement est déjà activé pour $AppNameShort"
+		SetTitle (GetTranslation "error")
+		Write-Host (GetTranslation "soggfy-already-installed")
 		EnterToContinue -DefaultPrompt $true
 		return
 	}
-	Write-Host "Voici les versions compatible avec la fonctionnalitée de téléchargement:"
-	Write-Host "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Mode téléchargement instable"
-	Write-Host "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Mode téléchargement compatible"
-	Write-Host "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Mode téléchargement instable"
+	Write-Host (GetTranslation "soggfy-compatible-versions")
+	Write-Host (GetTranslation "soggfy-compatible-versions-v1")
+	Write-Host (GetTranslation "soggfy-compatible-versions-v2")
+	Write-Host (GetTranslation "soggfy-compatible-versions-v3")
 	Write-Host ""
-	Write-Host "Le fonctionnement du mode téléchargement n'est pas garanti sur les versions `"instables`"."
-	Write-Host "Il est tout de même possible que cela fonctionne, n'hésitez pas à tester !"
+	Write-Host (GetTranslation "soggfy-warning")
 	EnterToContinue -DefaultPrompt $true
 	Write-Host ""
-	Write-Host "La fonctionnalité de téléchargement permet de télécharger vos musiques préférées juste en les écoutant !"
-	Write-Host "Il suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement enregistrée."
-	Write-Host "Vos musiques téléchargées seront disponible dans votre dossier Musique, puis Soggfy."
-	Write-Host "Pour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/tutos/tuto-telechargement.md"
+	Write-Host (GetTranslation "soggfy-speech")
 	Write-Host ""
-	$confirmation0 = Read-Host -Prompt "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)"
+	$confirmation0 = (GetTranslation "soggfy-confirm")
 	if ($confirmation0 -eq "Y") {
 		StopSpotify
-		Write-Host "Installation des fichiers nécessaire"
+		Write-Host (GetTranslation "installing-necessary-files")
 		Download -URL "https://spotixplus.com/files/windows/script/dpapi.dll" -Path "$env:AppData\Spotify\dpapi.dll"
 		#2
 		Download -URL "https://spotixplus.com/files/windows/script/SoggfyUIC.js" -Path "$env:AppData\Spotify\SoggfyUIC.js"
 
 		#FFMPEG
-		Write-Host "Installation de FFMPEG"
+		Write-Host (GetTranslation "installing-ffmpeg")
 		$soggfy1 = "$env:LocalAppData/Soggfy/"
 		if (-not (Test-Path -Path $soggfy1)) {
 			New-Item -Path $soggfy1 -ItemType Directory
@@ -710,35 +1122,34 @@ function Soggfy {
 		}
 		Download -URL "https://spotixplus.com/files/windows/script/ffmpeg.exe" -Path "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe"
 
-		Write-Host "La fonctionnalité de téléchargement est installée avec succès !"
-		Write-Host "Le script va continuer..."
+		Write-Host (GetTranslation "soggfy-success")
+		Write-Host (GetTranslation "script-will-continue")
 		Start-Sleep -Seconds 3
 	}
 }
 
 function Main {
 	# Changement nom fenêtre
-	SetTitle "Accueil"
+	SetTitle (GetTranslation "lobby")
 
 	# Affichage du logo
 	PrintLogo
 
 	# Accueil du script
-	Write-Host "Apps tierces utilisées: SpotX CLI, Spicetify, Soggfy"
+	Write-Host (GetTranslation "lobby-third-party-apps")
 	Write-Host ""
-	Write-Host "PREVENTION: ce script utilise votre connexion internet pour fonctionner correctement." -ForegroundColor Yellow
-	Write-Host "Ne désactivez pas votre connexion internet pendant l'exécution du script." -ForegroundColor Yellow
+	Write-Host (GetTranslation "lobby-warning") -ForegroundColor Yellow
 	Write-Host ""
 
 	Write-Host ((
-		"Que voulez-vous faire ?",
-		"1. 💾 Installer $AppNameShort",
-		"2. 🎶 Activer/Désactiver la qualité très élevée",
-		"3. ⤵️  Activer la fonctionnalité de téléchargement",
-		"4. 🗑️  Désinstaller $AppNameShort",
-		"5. 🌐 Ouvrir la page GitHub",
-		"6. 📨 Rejoindre notre serveur Discord",
-		"7. 👋 Fermer le script"
+		(GetTranslation "lobby-menu"),
+		"1. 💾 $(GetTranslation "lobby-menu1")",
+		"2. 🎶 $(GetTranslation "lobby-menu2")",
+		"3. ⤵️ $(GetTranslation "lobby-menu3")",
+		"4. 🗑️ $(GetTranslation "lobby-menu4")",
+		"5. 🌐 $(GetTranslation "lobby-menu5")",
+		"6. 📨 $(GetTranslation "lobby-menu6")",
+		"7. 👋 $(GetTranslation "lobby-menu7")"
 	) -join "`n`t")
 
 	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8")
@@ -762,17 +1173,17 @@ function Main {
 			Main
 		}
 		"5" {
-			Write-Host "Ouverture de la page GitHub.."
+			Write-Host (GetTranslation "lobby-menu5-openning-github")
 			Start-Process "https://github.com/$GithubUser/$GithubRepo"
 			Main
 		}
 		"6" {
-			Write-Host "Ouverture de la page GitHub.."
+			Write-Host (GetTranslation "lobby-menu6-openning-discord")
 			Start-Process $Discord
 			Main
 		}
 		"7" {
-			Write-Host "A bientôt !"
+			Write-Host (GetTranslation "lobby-menu7-goodbye")
 			Start-Sleep -Seconds 1
 			Stop-Transcript
 			exit
@@ -785,19 +1196,22 @@ function Main {
 }
 
 function CheckUpdate {
+	if (-not $PSCommandPath) {
+		Write-Host (GetTranslation "online-mode-skip-update")
+		return
+	}
 	$response = Invoke-WebRequest "https://api.github.com/repos/$GithubUser/$GithubRepo/releases/latest" | ConvertFrom-Json
 	$latestVersion = $response.tag_name
 	if ($latestVersion -eq "v$Version") { return }
 
 	PrintLogo
-	Write-Host "Une mise à jour du script à été trouvée"
+	Write-Host (GetTranslation "update-found")
 	Write-Host "v$Version -> $latestVersion"
-	$confirmation = Read-Host -Prompt "Voulez-vous la télécharger ? Cela est fortement recommandé. (Y/N)"
+	$confirmation = Read-Host -Prompt (GetTranslation "update-prompt")
 	if ($confirmation -eq "N") { return }
 
 	Invoke-WebRequest "https://github.com/AgoyaSpotix/spotixplus-reborn-windows/releases/download/$latestVersion/script.ps1" -OutFile $PSCommandPath
-	Write-Host "Mise à jour téléchargée"
-	Write-Host "Appuyez sur Entrée pour relancer la version mise à jour..."
+	Write-Host (GetTranslation "update-downloaded")
 	EnterToContinue
 	Start-Process "$PSHOME\pwsh.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" -FromLauncher"
 	exit
