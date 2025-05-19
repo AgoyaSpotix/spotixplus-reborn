@@ -15,6 +15,17 @@ jobs:
           echo "VERSION=$(cat script.ps1 | grep \$Version -m 1 | grep -oP '"\K[^"\047]+(?=["\047])')" >> $GITHUB_ENV
           echo "Found version v${{ env.VERSION }}"
 
+      - name: Get previous nightly body
+        uses: octokit/request-action@v2.x
+        id: get_nightly_body
+        with:
+          route: /repos/{owner}/{repo}/releases/tags/{tag}
+          owner: AgoyaSpotix
+          repo: spotixplus-reborn
+          tag: nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Update Development Nightly
         uses: andelf/nightly-release@main
         env:
@@ -23,5 +34,5 @@ jobs:
           tag_name: 'nightly'
           name: 'SpotiX+ Reborn - BETA (v${{ env.VERSION }})'
           prerelease: true
-          draft: true
+          body: 'fromJson(steps.get_nightly_body.outputs.data).body'
           files: 'script.ps1'
