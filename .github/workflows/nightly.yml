@@ -34,5 +34,5 @@ jobs:
           tag_name: 'nightly'
           name: 'SpotiX+ Reborn - BETA (v${{ env.VERSION }})'
           prerelease: true
-          body: 'fromJson(steps.get_nightly_body.outputs.data).body'
+          body: '{{ fromJson(steps.get_nightly_body.outputs.data).body }}'
           files: 'script.ps1'
