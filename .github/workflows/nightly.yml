@@ -24,5 +24,4 @@ jobs:
           name: 'SpotiX+ Reborn - BETA (v${{ env.VERSION }})'
           prerelease: true
           draft: true
-          body: '**AVERTISSEMENT :** cette version est en cours de développement, elle peut être instable !'
           files: 'script.ps1'
