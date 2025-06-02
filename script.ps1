@@ -22,11 +22,10 @@ $Logo = "
                   |  _ <  __/ |_) | (_) | |  | | | |
                   |_| \_\___|_.__/ \___/|_|  |_| |_|
 
-       ----------------------------------------------
-      /     Merci d'avoir téléchargé le script      /
-     /                Made with <3                 /
-    /                Version $Version                  /
-   -----------------------------------------------
+       ---------------------------------------------
+      /               Made with <3                 /
+     /                    v$Version                    /
+    ----------------------------------------------
 "
 
 # Paramètres PowerShell
@@ -117,7 +116,7 @@ $localizations = @"
 		},
 		"lobby": {
 			"fr-FR": "Accueil",
-			"en-US": "Lobby"
+			"en-US": "Main menu"
 		},
 		"lobby-third-party-apps": {
 			"fr-FR": "Apps tierces utilisées: SpotX CLI, Spicetify, Soggfy",
@@ -172,260 +171,340 @@ $localizations = @"
 			"en-US": "See you soon !"
 		},
 		"msstore-check-found": {
-			"fr-FR": "Une version de Spotify venant du Microsoft Store (UWP) a été détectée. (Version : `$ms_version)"
+			"fr-FR": "Une version de Spotify venant du Microsoft Store (UWP) a été détectée. (Version : `$ms_version)",
+			"en-US": "A version of Spotify coming from the Microsoft Store (UWP) has been found. (Version : `$ms_version)"
 		},
 		"msstore-check-warning": {
-			"fr-FR": "Cette version peut être utilisée en paralèle de $AppNameShort, mais cela crééra deux versions de Spotify sur votre système."
+			"fr-FR": "Cette version peut être utilisée en paralèle de $AppNameShort, mais cela crééra deux versions de Spotify sur votre système.",
+			"en-US": "This version can be usable alongside $AppNameShort, but it will create two versions of Spotify on your system."
 		},
 		"msstore-check-prompt": {
-			"fr-FR": "Voulez-vous la désinstaller ? (Vous devez être administrateur !) (Y/N)"
+			"fr-FR": "Voulez-vous la désinstaller ? (Vous devez être administrateur !) (Y/N)",
+			"en-US": "Would you like to uninstall it ? (You need to be an adminitrator !) (Y/N)"
 		},
 		"msstore-check-uninstalling": {
-			"fr-FR": "Désinstalltion de Spotify UWP `$ms_version..."
+			"fr-FR": "Désinstalltion de Spotify UWP `$ms_version...",
+			"en-US": "Uninstalling Spotify UWP `$ms_version..."
 		},
 		"msstore-check-uninstall-failed": {
-			"fr-FR": "La désinstalltion à échoué."
+			"fr-FR": "La désinstalltion à échoué.",
+			"en-US": "The uninstallation failed."
 		},
 		"retry": {
-			"fr-FR": "Réessayer ? (Y/N)"
+			"fr-FR": "Réessayer ? (Y/N)",
+			"en-US": "Retry ? (Y/N)"
 		},
 		"script-will-continue": {
-			"fr-FR": "Le script va continuer..."
+			"fr-FR": "Le script va continuer...",
+			"en-US": "The script will continue..."
 		},
 		"msstore-check-uninstalled-successfully": {
-			"fr-FR": "Spotify UWP a été désinstallé avec succès !"
+			"fr-FR": "Spotify UWP a été désinstallé avec succès !",
+			"en-US": "Spotify UWP has been successfully uninstalled !"
 		},
 		"spotify-check-found": {
-			"fr-FR": "Une installation de Spotify incompatible a été détectée. Pour le bon fonctionnement du script, vous devez la désinstaller.`nNous pouvons le faire pour vous."
+			"fr-FR": "Une installation de Spotify incompatible a été détectée. Pour le bon fonctionnement du script, vous devez la désinstaller.`nNous pouvons le faire pour vous.",
+			"en-US": "An uncompatible installation of Spotify has been detected. For the well being of the script, you need to uninstall it.`nWe can do it for you."
 		},
 		"spotify-check-prompt": {
-			"fr-FR": "Voulez-vous désinstaller Spotify ? (Y/N)"
+			"fr-FR": "Voulez-vous désinstaller Spotify ? (Y/N)",
+			"en-US": "Would you like to uninstall Spotify ? (Y/N)"
 		},
 		"spotify-check-uninstalling": {
-			"fr-FR": "Lancement de la désinstallation de Spotify..."
+			"fr-FR": "Lancement de la désinstallation de Spotify...",
+			"en-US": "Launching the uninstallation of Spotify..."
 		},
 		"spotify-check-uninstalling-failed": {
-			"fr-FR": "La désinstallation de Spotify a échoué. Appuyez sur Entrée pour recommencer..."
+			"fr-FR": "La désinstallation de Spotify a échoué. Appuyez sur Entrée pour recommencer...",
+			"en-US": "The uninstallation of Spotify failed. Press Enter to retry..."
 		},
 		"spotify-check-uninstall-successful": {
-			"fr-FR": "Spotify a correctement été désinstallé !"
-		},
-		"spotify-check-uninstall-successful-continue": {
-			"fr-FR": "Le script va continuer..."
+			"fr-FR": "Spotify a correctement été désinstallé !",
+			"en-US": "Spotify was correctly installed !"
 		},
 		"spotify-check-returning": {
-			"fr-FR": "Impossible d'installer $AppNameShort. Retour au menu principal dans 3 secondes..."
+			"fr-FR": "Impossible d'installer $AppNameShort. Retour au menu principal dans 3 secondes...",
+			"en-US": "Could not install $AppNameShort. Returning to the main menu in 3 seconds..."
 		},
 		"app-install-version-choice-prompt": {
-			"fr-FR": "Quelle version de Spotify souhaitez-vous ?"
+			"fr-FR": "Quelle version de Spotify souhaitez-vous ?",
+			"en-US": "Which Spotify version would you like ?"
 		},
 		"app-install-version-choice-version1": {
-			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable"
+			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable",
+			"en-US": "New UI - Latest version      - Compatible with Windows 11/10     - External plugins compatible - Download feature unstable"
 		},
 		"app-install-version-choice-version2": {
-			"fr-FR": "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible"
+			"fr-FR": "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible",
+			"en-US": "New UI - Version 1.2.31.1205 - Compatible with Windows 11/10     - External plugins compatible - Download feature compatible"
 		},
 		"app-install-version-choice-version3": {
-			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable"
+			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable",
+			"en-US": "Old UI - Version 1.2.5.1006  - Compatible with Windows 11/10/8.1 - External plugins unstable   - Download feature unstable"
 		},
 		"app-install-version-choice-more-info": {
-			"fr-FR": "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)"
+			"fr-FR": "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)",
+			"en-US": "To learn more about the differences between each versions, please consult the wiki of the $AppNameShort website (1/2/3)"
 		},
 		"installation": {
 			"fr-FR": "Installation",
 			"en-US": "Installation"
 		},
 		"downloading-and-installing": {
-			"fr-FR": "Téléchargement et installation de Spotify..."
+			"fr-FR": "Téléchargement et installation de Spotify...",
+			"en-US": "Downloading and installing Spotify..."
 		},
 		"spotify-install-prompt": {
-			"fr-FR": "Une fois Spotify installé, veuillez presser la touche Entrée..."
+			"fr-FR": "Une fois Spotify installé, veuillez presser la touche Entrée...",
+			"en-US": "Once Spotify is installed, please press the Enter key..."
 		},
 		"spotx-cli-download": {
-			"fr-FR": "Téléchargement/Installation de SpotX CLI..."
+			"fr-FR": "Téléchargement/Installation de SpotX CLI...",
+			"en-US": "Downloading/Installing SpotX CLI..."
 		},
 		"spotx-configuration": {
-			"fr-FR": "SpotX Configuration"
+			"fr-FR": "Configuration de SpotX",
+			"en-US": "SpotX Configuration"
 		},
 		"spotx-installed": {
-			"fr-FR": "Script 1/2 installés : SpotiX installé"
+			"fr-FR": "Script 1/2 installés : SpotiX installé",
+			"en-US": "Script 1/2 installed : SpotiX installed"
 		},
 		"spotify-closing": {
-			"fr-FR": "Fermeture de Spotify pour faciliter l'exécution des scripts"
+			"fr-FR": "Fermeture de Spotify pour faciliter l'exécution des scripts",
+			"en-US": "Closing Spotify to facilitate the execution of the scripts"
 		},
 		"creating-necessary-folder": {
-			"fr-FR": "Création des dossiers nécessaires"
+			"fr-FR": "Création des dossiers nécessaires",
+			"en-US": "Creating necessary folders"
 		},
 		"spicetify-configuration": {
 			"fr-FR": "Configuration de Spicetify",
 			"en-US": "Spicetify Configuration"
 		},
 		"spicetify-installed": {
-			"fr-FR": "Script 2/2 installés : Spicetify"
+			"fr-FR": "Script 2/2 installés : Spicetify",
+			"en-US": "Script 2/2 installed : Spicetify"
 		},
 		"app-configuration": {
-			"fr-FR": "Configuration de $AppNameShort"
+			"fr-FR": "Configuration de $AppNameShort",
+			"en-US": "Configuring $AppNameShort"
 		},
 		"download-app-files": {
-			"fr-FR": "Une erreur s'est produite durant le téléchargement des fichiers nécessaires`nNe retentez pas de lancer le script, cela pourrait générer des conflits`nMerci de contacter le support de $AppNameShort"
+			"fr-FR": "Une erreur s'est produite durant le téléchargement des fichiers nécessaires`nNe retentez pas de lancer le script, cela pourrait générer des conflits`nMerci de contacter le support de $AppNameShort",
+			"en-US": "An error occured during the downloading of the necessary files`nDo not try to relaunch the script, it can cause conflits`nPlease contact the $AppNameShort"
 		},
 		"spicetify-plugins": {
 			"fr-FR": "Plugins Spicetify",
 			"en-US": "Spicetify plugins"
 		},
 		"spicetify-plugins-prompt": {
-			"fr-FR": "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur"
+			"fr-FR": "Spicetify propose 3 plugins externes pouvant améliorer l'expérience utilisateur",
+			"en-US": "Spicetify proposes 3 external plugins that can improve the user experience"
 		},
 		"spicetify-plugins-prompt-2": {
-			"fr-FR": "Souhaitez vous installer des plugins externes ?"
+			"fr-FR": "Souhaitez vous installer des plugins externes ?",
+			"en-US": "Would you like to install external plugins ?"
 		},
 		"spicetify-plugins-plugin-1": {
-			"fr-FR": "Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify"
+			"fr-FR": "Reddit: récupérez des messages de n'importe quel subreddit de partage de liens Spotify",
+			"en-US": "Reddit: get messages from any Spotify sharing links subreddits"
 		},
 		"spicetify-plugins-plugin-2": {
-			"fr-FR": "Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,`n                tels que Musixmatch, Netease et Genius"
+			"fr-FR": "Lyrics-plus: accédez aux paroles du titre actuel grâce à divers fournisseurs,`n                tels que Musixmatch, Netease et Genius",
+			"en-US": "Lyrics-plus: access to lyrics of the current title thanks to multiple providers,`n                such as Musixmatch, Netease and Genius"
 		},
 		"spicetify-plugins-plugin-3": {
-			"fr-FR": "New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés"
+			"fr-FR": "New-releases: regroupez toutes les nouvelles sorties de vos artistes et podcasts préférés",
+			"en-US": "New-releases: regroup new releases from your favorite artists and podcasts"
 		},
 		"spicetify-plugins-prompt-3": {
-			"fr-FR": "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)`nAppuyez sur Entrer en laissant vide pour ne rien installer"
+			"fr-FR": "Vous pouvez choisir plusieurs plugins externes en mettant une virgule entre chaque nombre (ex : 2,3)`nAppuyez sur Entrer en laissant vide pour ne rien installer",
+			"en-US": "You have the choice between multiple plugins by putting a comma (ex : 2,3)`nPress Enter while leaving it empty to install none of them"
 		},
 		"spicetify-plugin-reddit-installing": {
-			"fr-FR": "Installation du plugin externe \"Reddit\"..."
+			"fr-FR": "Installation du plugin externe \"Reddit\"...",
+			"en-US": "Installing external plugin \"Reddit\"..."
 		},
 		"spicetify-plugin-reddit-installing-success": {
-			"fr-FR": "Plugin externe \"Reddit\" installé avec succès !"
+			"fr-FR": "Plugin externe \"Reddit\" installé avec succès !",
+			"en-US": "External plugin \"Reddit\" installed successfully !"
 		},
 		"spicetify-plugin-lyricsplus-installing": {
-			"fr-FR": "Installation du plugin externe \"Lyrics-plus\"..."
+			"fr-FR": "Installation du plugin externe \"Lyrics-plus\"...",
+			"en-US": "Installing external plugin \"Lyrics-plus\"..."
 		},
 		"spicetify-plugin-lyricsplus-installing-success": {
-			"fr-FR": "Plugin externe \"Lyrics-plus\" installé avec succès !"
+			"fr-FR": "Plugin externe \"Lyrics-plus\" installé avec succès !",
+			"en-US": "External plugin \"Lyrics-plus\" installed successfully !"
 		},
 		"spicetify-plugin-newreleases-installing": {
-			"fr-FR": "Installation du plugin externe \"New-releases\"..."
+			"fr-FR": "Installation du plugin externe \"New-releases\"...",
+			"en-US": "Installing external plugin \"New-releases\"..."
 		},
 		"spicetify-plugin-newreleases-installing-success": {
-			"fr-FR": "Plugin externe \"New-releases\" installé avec succès !"
+			"fr-FR": "Plugin externe \"New-releases\" installé avec succès !",
+			"en-US": "External plugin \"New-releases\" installed successfully !"
 		},
 		"install-finished": {
-			"fr-FR": "Installation terminée"
+			"fr-FR": "Installation terminée",
+			"en-US": "Installation finished"
 		},
 		"configuration-finished": {
-			"fr-FR": "Fin de la configuration de $AppNameShort..."
+			"fr-FR": "Fin de la configuration de $AppNameShort...",
+			"en-US": "End of the configuration of $AppNameShort..."
 		},
 		"install-successful": {
-			"fr-FR": "$AppNameShort installé avec succès !"
+			"fr-FR": "$AppNameShort installé avec succès !",
+			"en-US": "$AppNameShort installed successfully !"
 		},
 		"uninstall-app-not-found": {
-			"fr-FR": "Vous ne pouvez pas déinstaller $AppNameShort car celui-ci n'est pas installé."
+			"fr-FR": "Vous ne pouvez pas désinstaller $AppNameShort car celui-ci n'est pas installé.",
+			"en-US": "You cannot uninstall $AppNameShort since it isn't installed."
 		},
 		"uninstall-app-confirmation": {
-			"fr-FR": "Êtes vous sûr de vouloir désinstaller $AppNameShort et tout ses composants ? (Y/N)"
+			"fr-FR": "Êtes vous sûr de vouloir désinstaller $AppNameShort et tout ses composants ? (Y/N)",
+			"en-US": "Are you sure to uninstall $AppNameShort and its components ? (Y/N)"
 		},
 		"uninstalling": {
-			"fr-FR": "Désinstallation"
+			"fr-FR": "Désinstallation",
+			"en-US": "Unintallation"
 		},
 		"uninstall-starting": {
-			"fr-FR": "Lancement de la désinstallation de $AppNameShort..."
+			"fr-FR": "Lancement de la désinstallation de $AppNameShort...",
+			"en-US": "Starting the uninstallation of $AppNameShort..."
 		},
 		"spotify-uninstall": {
-			"fr-FR": "Désinstallation de Spotify..."
+			"fr-FR": "Désinstallation de Spotify...",
+			"en-US": "Deleting Spotify..."
 		},
 		"spotify-uninstall-fail": {
-			"fr-FR": "La désinstallation de Spotify a échouée ou a été annulée. Appuyez sur Entrée pour retourner au menu principal..."
+			"fr-FR": "La désinstallation de Spotify a échouée ou a été annulée. Appuyez sur Entrée pour retourner au menu principal...",
+			"en-US": "The uninstallation of Spotify failed or was cancelled. Please press Enter to return to the main menu..."
 		},
 		"spicetify-uninstalling": {
-			"fr-FR": "Suppresion de Spicetify..."
+			"fr-FR": "Suppresion de Spicetify...",
+			"en-US": "Deleting Spicetify..."
 		},
 		"spotify-uninstall-complete": {
-			"fr-FR": "Suppresion des résidus de Spotify..."
+			"fr-FR": "Suppresion des résidus de Spotify...",
+			"en-US": "Deleting residual files from Spotify..."
 		},
 		"spotx-uninstall": {
-			"fr-FR": "Suppresion de SpotX..."
+			"fr-FR": "Suppresion de SpotX...",
+			"en-US": "Deleting SpotX..."
 		},
 		"soggfy-uninstall": {
-			"fr-FR": "Suppression de Soggfy..."
+			"fr-FR": "Suppression de Soggfy...",
+			"en-US": "Deleting Soggfy..."
 		},
 		"app-uninstalled-successfully": {
-			"fr-FR": "$AppNameShort désinstallé avec succès !"
+			"fr-FR": "$AppNameShort désinstallé avec succès !",
+			"en-US": "$AppNameShort uninstalled successfully !"
 		},
 		"cancelling": {
-			"fr-FR": "Annulation..."
+			"fr-FR": "Annulation...",
+			"en-US": "Canceling..."
 		},
 		"audio-configuration": {
 			"fr-FR": "Configuration Audio",
 			"en-US": "Audio Configuration"
 		},
 		"app-installed-check": {
-			"fr-FR": "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord."
+			"fr-FR": "$AppNameShort n'est pas installé sur votre PC, merci de l'installer d'abord.",
+			"en-US": "$AppNameShort is not installed on your PC, please install it first."
 		},
 		"audio-warning": {
-			"fr-FR": "ATTENTION: ne démarrez pas $AppNameShort pendant ce processus, cela pourrait engendrer des conflits"
+			"fr-FR": "ATTENTION: ne démarrez pas $AppNameShort pendant ce processus, cela pourrait engendrer des conflits",
+			"en-US": "WARNING: do not start $AppNameShort during the processus, it could cause conflits"
 		},
 		"audio-prompt": {
-			"fr-FR": "Quelle qualité audio souhaitez-vous ?"
+			"fr-FR": "Quelle qualité audio souhaitez-vous ?",
+			"en-US": "Which audio quality would you like ?"
 		},
 		"audio-high": {
-			"fr-FR": "Qualité très élevée"
+			"fr-FR": "Qualité très élevée",
+			"en-US": "High quality"
 		},
 		"audio-low": {
-			"fr-FR": "Qualité basique (réglable depuis $AppNameShort)"
+			"fr-FR": "Qualité basique (réglable depuis $AppNameShort)",
+			"en-US": "Basic quality (adjustable in $AppNameShort)"
+		},
+		"audio-no-changes": {
+			"fr-FR": "Laisser tel quel",
+			"en-US": "Do not change it"
 		},
 		"audio-high-configuration": {
-			"fr-FR": "Configuration de la qualité très élevée"
+			"fr-FR": "Configuration de la qualité très élevée",
+			"en-US": "Configuring the high quality"
 		},
 		"audio-error": {
-			"fr-FR": "Une erreur s'est produite durant le téléchargement des fichiers nécessaires.`nNe retentez pas de lancer le script, cela pourrait faire des conflits`nMerci de contacter le support de $AppNameShort"
+			"fr-FR": "Une erreur s'est produite durant le téléchargement des fichiers nécessaires.`nNe retentez pas de lancer le script, cela pourrait faire des conflits`nMerci de contacter le support de $AppNameShort",
+			"en-US": "An error occured during the installation of the necessary files.`nDo not try to relaunch the script, it can cause conflits`nPlease contact the $AppNameShort"
 		},
 		"closing-window": {
-			"fr-FR": "Fermeture de la fenêtre..."
+			"fr-FR": "Fermeture de la fenêtre...",
+			"en-US": "Closing the window..."
 		},
 		"audio-high-done": {
-			"fr-FR": "La qualité très élevée est appliquée !"
+			"fr-FR": "La qualité très élevée est appliquée !",
+			"en-US": "High quality has been successfully applied !"
 		},
 		"audio-low-configuration": {
-			"fr-FR": "Suppresion de la qualité très élévée"
+			"fr-FR": "Suppresion de la qualité très élévée",
+			"en-US": "Removing the high quality"
 		},
 		"audio-low-done": {
-			"fr-FR": "La qualité très élevée a été supprimée avec succès !"
+			"fr-FR": "La qualité très élevée a été supprimée avec succès !",
+			"en-US": "High quality removed successfully !"
 		},
 		"soggfy": {
-			"fr-FR": "Fonctionnalité de téléchargement"
+			"fr-FR": "Fonctionnalité de téléchargement",
+			"en-US": "Download feature"
 		},
 		"soggfy-already-installed": {
-			"fr-FR": "Le mode téléchargement est déjà activé pour $AppNameShort"
+			"fr-FR": "Le mode téléchargement est déjà activé pour $AppNameShort",
+			"en-US": "The download feature has already been enabled for $AppNameShort"
 		},
 		"soggfy-compatible-versions": {
-			"fr-FR": "Voici les versions compatible avec la fonctionnalitée de téléchargement:"
+			"fr-FR": "Voici les versions compatible avec la fonctionnalitée de téléchargement :",
+			"en-US": "Here are the compatible versions with the download feature :"
 		},
 		"soggfy-compatible-versions-v1": {
-			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Mode téléchargement instable"
+			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Mode téléchargement instable",
+			"en-US": "New UI - Latest version      - Compatible with Windows 11/10     - Download feature unstable"
 		},
 		"soggfy-compatible-versions-v2": {
-			"fr-FR": "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Mode téléchargement compatible"
+			"fr-FR": "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Mode téléchargement compatible",
+			"en-US": "New UI - Version 1.2.31.1205 - Compatible with Windows 11/10     - Download feature compatible"
 		},
 		"soggfy-compatible-versions-v3": {
-			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Mode téléchargement instable"
+			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Mode téléchargement instable",
+			"en-US": "Old UI - Version 1.2.5.1006  - Compatible with Windows 11/10/8.1 - Download feature unstable"
 		},
 		"soggfy-warning": {
-			"fr-FR": "Le fonctionnement du mode téléchargement n'est pas garanti sur les versions \"instables\".`nIl est tout de même possible que cela fonctionne, n'hésitez pas à tester !"
+			"fr-FR": "Le fonctionnement du mode téléchargement n'est pas garanti sur les versions \"instables\".`nIl est tout de même possible que cela fonctionne, n'hésitez pas à tester !",
+			"en-US": "The download feature is not guaranteed to work on \"unstable\" versions.`nBut there is still a chance it could work, so you can try it !"
 		},
 		"soggfy-speech": {
-			"fr-FR": "La fonctionnalité de téléchargement permet de télécharger vos musiques préférées juste en les écoutant !`nIl suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement enregistrée.`nVos musiques téléchargées seront disponible dans votre dossier Musique, puis Soggfy.`nPour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/tutos/tuto-telechargement.md"
+			"fr-FR": "La fonctionnalité de téléchargement permet de télécharger vos musiques préférées juste en les écoutant !`nIl suffit d'écouter la musique que vous souhaitez télécharger en entier, et celle-ci sera automatiquement enregistrée.`nVos musiques téléchargées seront disponible dans votre dossier Musique, puis Soggfy.`nPour en savoir plus, veuillez consulter le tutoriel ici : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/tutos/tuto-telechargement.md",
+			"en-US": "The download feature allows you to download your favorite songs while listening to them !`nYou just have to listen to the song you want to donwload in its entirety, and it will be automatically downloaded.`nYour songs will be avaiable in your Musics folder, then Soggfy.`nTo learn more about it, please consult the wiki there : https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/tutos/tuto-telechargement.md"
 		},
 		"soggfy-confirm": {
-			"fr-FR": "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)"
+			"fr-FR": "Souhaitez-vous activer la fonctionnalité de téléchargement ? (Y/N)",
+			"en-US": "Would you like to enable the download feature ? (Y/N)"
 		},
 		"installing-necessary-files": {
-			"fr-FR": "Installation des fichiers nécessaire"
+			"fr-FR": "Installation des fichiers nécessaire",
+			"en-US": "Installing necessary files"
 		},
 		"installing-ffmpeg": {
-			"fr-FR": "Installation de FFMPEG"
+			"fr-FR": "Installation de FFMPEG",
+			"en-US": "Installing FFMPEG"
 		},
 		"soggfy-success": {
-			"fr-FR": "La fonctionnalité de téléchargement est installée avec succès !"
+			"fr-FR": "La fonctionnalité de téléchargement est installée avec succès !",
+			"en-US": "The download feature has been enabled successfully"
 		}
 	}
 }
@@ -733,7 +812,7 @@ function Install {
 				EnterToContinue
 			} else {
 				Write-Host (GetTranslation "spotify-check-uninstall-successful") -ForegroundColor Green
-				Write-Host (GetTranslation "spotify-check-uninstall-successful-continue")
+				Write-Host (GetTranslation "script-will-continue")
 				Start-Sleep -Seconds 3
 				Install
 				Main
