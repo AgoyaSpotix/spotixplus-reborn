@@ -493,7 +493,8 @@ function RemoveIfExists {
 function Download {
 	param (
 		[string] $URL,
-		[string] $Path
+		[string] $Path,
+		[bool] $Clear = $true
 	)
 	$webClient = New-Object System.Net.WebClient
 	$bufferSize = 8192  # 8KB
@@ -512,7 +513,9 @@ function Download {
 		$timeElapsed = (Get-Date) - $startTime
 		$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
 		$percentComplete = ($totalBytesReceived / $totalBytes) * 100
-		Clear-Host
+		if ($Clear) {
+			Clear-Host
+		}
 		Write-Progress -Activity (GetTranslation "downloading") -Status "$([math]::Round($percentComplete, 2))% $(GetTranslation "percentage-done")" -PercentComplete $percentComplete
 	}
 
@@ -1102,13 +1105,13 @@ function Soggfy {
 	Write-Host ""
 	Write-Host (GetTranslation "soggfy-speech")
 	Write-Host ""
-	$confirmation0 = (GetTranslation "soggfy-confirm")
+	$confirmation0 = Read-Host -Prompt (GetTranslation "soggfy-confirm")
 	if ($confirmation0 -eq "Y") {
 		StopSpotify
 		Write-Host (GetTranslation "installing-necessary-files")
-		Download -URL "https://spotixplus.com/files/windows/script/dpapi.dll" -Path "$env:AppData\Spotify\dpapi.dll"
+		Download -URL "https://spotixplus.com/files/windows/script/dpapi.dll" -Path "$env:AppData\Spotify\dpapi.dll" -Clear $false
 		#2
-		Download -URL "https://spotixplus.com/files/windows/script/SoggfyUIC.js" -Path "$env:AppData\Spotify\SoggfyUIC.js"
+		Download -URL "https://spotixplus.com/files/windows/script/SoggfyUIC.js" -Path "$env:AppData\Spotify\SoggfyUIC.js" -Clear $false
 
 		#FFMPEG
 		Write-Host (GetTranslation "installing-ffmpeg")
@@ -1120,7 +1123,7 @@ function Soggfy {
 		if (-not (Test-Path -Path $soggfy2)) {
 			New-Item -Path $soggfy2 -ItemType Directory
 		}
-		Download -URL "https://spotixplus.com/files/windows/script/ffmpeg.exe" -Path "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe"
+		Download -URL "https://spotixplus.com/files/windows/script/ffmpeg.exe" -Path "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe" -Clear $false
 
 		Write-Host (GetTranslation "soggfy-success")
 		Write-Host (GetTranslation "script-will-continue")
