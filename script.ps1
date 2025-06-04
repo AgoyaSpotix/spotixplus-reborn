@@ -525,7 +525,7 @@ function GetTranslation {
 		return $localizations["translations"][$string_id][$language_id]
 	}
 	# Language for default region found
-	if ($localizations["translations"][$string_id].ContainsKey($language_id_defaulted)) {
+	if (($language_id_defaulted -ne $null) -and ($localizations["translations"][$string_id].ContainsKey($language_id_defaulted))) {
 		return $localizations["translations"][$string_id][$language_id_defaulted]
 	}
 	# Defaults to en-US
