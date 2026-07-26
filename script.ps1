@@ -1,7 +1,7 @@
-﻿# Constantes
+# Constantes
 $AppNameShort = "SpotiX+ Reborn"
 $AppName = "$AppNameShort PC Script"
-$Version = "2.0"
+$Version = "2.1"
 $ByPassAdmin = $false
 $NoTranslations = $false
 
@@ -119,8 +119,8 @@ $localizations = @"
 			"en-US": "Main menu"
 		},
 		"lobby-third-party-apps": {
-			"fr-FR": "Apps tierces utilisées: SpotX CLI, Spicetify, Soggfy",
-			"en-US": "Third party apps used : SpotX CLI, Spicetify, Soggfy"
+			"fr-FR": "Apps tierces utilisées: SpotX CLI, Spicetify",
+			"en-US": "Third party apps used : SpotX CLI, Spicetify"
 		},
 		"lobby-warning": {
 			"fr-FR": "ATTENTION: Ce script utilise votre connexion internet pour fonctionner correctement.`nNe désactivez pas votre connexion internet pendant l'exécution du script.",
@@ -139,34 +139,38 @@ $localizations = @"
 			"en-US": "Enable/Disable high quality"
 		},
 		"lobby-menu3": {
-			"fr-FR": "Activer la fonctionnalité de téléchargement",
-			"en-US": "Enable the download feature"
+			"fr-FR": "Activer la fonctionnalité de téléchargement (Broken, alternative)",
+			"en-US": "Enable the download feature (Broken, alternative)"
 		},
 		"lobby-menu4": {
+			"fr-FR": "Configuration de Spicetify",
+			"en-US": "Spicetify Configuration"
+		},
+		"lobby-menu5": {
 			"fr-FR": "Désinstaller $AppNameShort",
 			"en-US": "Uninstall $AppNameShort"
 		},
-		"lobby-menu5": {
+		"lobby-menu6": {
 			"fr-FR": "Ouvrir la page GitHub",
 			"en-US": "Open GitHub Webpage"
 		},
-		"lobby-menu6": {
+		"lobby-menu7": {
 			"fr-FR": "Rejoindre notre serveur Discord",
 			"en-US": "Join our Discord server"
 		},
-		"lobby-menu7": {
+		"lobby-menu8": {
 			"fr-FR": "Fermer le script",
 			"en-US": "Close the script"
 		},
-		"lobby-menu5-openning-github": {
+		"lobby-menu6-openning-github": {
 			"fr-FR": "Ouverture de la page GitHub...",
 			"en-US": "Openning the GitHub Webpage..."
 		},
-		"lobby-menu6-openning-discord": {
+		"lobby-menu7-openning-discord": {
 			"fr-FR": "Ouverture du lien d'invitation Discord...",
 			"en-US": "Openning the Discord join link..."
 		},
-		"lobby-menu7-goodbye": {
+		"lobby-menu8-goodbye": {
 			"fr-FR": "A bientôt !",
 			"en-US": "See you soon !"
 		},
@@ -231,16 +235,16 @@ $localizations = @"
 			"en-US": "Which Spotify version would you like ?"
 		},
 		"app-install-version-choice-version1": {
-			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement instable",
-			"en-US": "New UI - Latest version      - Compatible with Windows 11/10     - External plugins compatible - Download feature unstable"
+			"fr-FR": "Nouvelle interface - Dernière version    - Compatible avec Windows 11/10     - Plugin externe compatible - EXPERIMENTAL",
+			"en-US": "New UI - Latest version      - Compatible with Windows 11/10     - External plugins compatible - EXPERIMENTAL"
 		},
 		"app-install-version-choice-version2": {
-			"fr-FR": "Nouvelle interface - Version 1.2.31.1205 - Compatible avec Windows 11/10     - Plugin externe compatible - Mode téléchargement compatible",
-			"en-US": "New UI - Version 1.2.31.1205 - Compatible with Windows 11/10     - External plugins compatible - Download feature compatible"
+			"fr-FR": "Nouvelle interface - Version 1.2.78.418 - Compatible avec Windows 11/10     - Plugin externe compatible - Stable",
+			"en-US": "New UI - Version 1.2.78.418 - Compatible with Windows 11/10     - External plugins compatible - Stable"
 		},
 		"app-install-version-choice-version3": {
-			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Mode téléchargement instable",
-			"en-US": "Old UI - Version 1.2.5.1006  - Compatible with Windows 11/10/8.1 - External plugins unstable   - Download feature unstable"
+			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Instable",
+			"en-US": "Old UI - Version 1.2.5.1006  - Compatible with Windows 11/10/8.1 - External plugins unstable   - Unstable"
 		},
 		"app-install-version-choice-more-info": {
 			"fr-FR": "Pour en savoir plus sur les différences entre les versions, consultez la page tutoriel PC du site $AppNameShort (1/2/3)",
@@ -285,6 +289,10 @@ $localizations = @"
 		"spicetify-installed": {
 			"fr-FR": "Script 2/2 installés : Spicetify",
 			"en-US": "Script 2/2 installed : Spicetify"
+		},
+		"spicetify-installed2": {
+			"fr-FR": "Spicetify est installée",
+			"en-US": "Spicetify installed"
 		},
 		"app-configuration": {
 			"fr-FR": "Configuration de $AppNameShort",
@@ -505,6 +513,42 @@ $localizations = @"
 		"soggfy-success": {
 			"fr-FR": "La fonctionnalité de téléchargement est installée avec succès !",
 			"en-US": "The download feature has been enabled successfully"
+		},
+		"soggfy-dead": {
+			"fr-FR": "Malheureusement, Soggfy n’est plus maintenu par ses développeurs. `nNous avons donc dû le retirer, car il ne fonctionne plus. Nous vous proposons toutefois une alternative.",
+			"en-US": "Unfortunately, Soggfy is no longer maintained by its developers and no longer works properly. `nWe’ve therefore had to remove it, but don’t worry — an alternative is available!"
+		},
+		"soggfy-dead1": {
+			"fr-FR": "SpotiFLAC est un outil simple et pratique qui vous permet de télécharger facilement vos musiques en qualité Hi-Res FLAC certifiée, avec les pochettes d’album et les paroles ! `nhttps://github.com/spotbye/SpotiFLAC",
+			"en-US": "SpotiFLAC is a simple and convenient tool that lets you easily download your music in certified Hi-Res FLAC quality, complete with album artwork and lyrics! `nhttps://github.com/spotbye/SpotiFLAC"
+		},
+		"spicetify-helper": {
+			"fr-FR": "Configuration de Spicetify",
+			"en-US": "Spicetify Configuration"
+		},
+		"spicetify-configh": {
+			"fr-FR": "Vous pouvez installer ou désinstaller Spicetify en cas de problème.",
+			"en-US": "You can install or uninstall Spicetify if you’re experiencing any issues."
+		},
+		"spicetify-configh1": {
+			"fr-FR": "Que souhaitez-vous faire ?",
+			"en-US": "What would you like to do?"
+		},
+		"spicetify-install": {
+			"fr-FR": "Installer Spicetify",
+			"en-US": "Install Spicetify"
+		},
+		"spicetify-uninstall": {
+			"fr-FR": "Désintaller Spicetify",
+			"en-US": "Uninstall Spicetify"
+		},
+		"spicetify-uninstall-done": {
+			"fr-FR": "Désinstallation de Spicetify terminée",
+			"en-US": "Spicetify uninstall completed"
+		},
+		"return": {
+			"fr-FR": "Retourner à la page d'accueil",
+			"en-US": "RReturn to the home page"
 		}
 	}
 }
@@ -838,12 +882,12 @@ function Install {
 					$spotifyInstaller = "$env:TEMP\SpotifySetup.exe"
 				}
 				"2" {
-					$url = "https://spotixplus.com/files/windows/script/spotify-verdownload.exe"
-					$spotifyInstaller = "$env:TEMP\spotify-verdownload.exe"
+					$url = "https://spotixplus.fr/files/windows/script/spotify1.2.78.exe"
+					$spotifyInstaller = "$env:TEMP\spotify1.2.78.exe"
 				}
-				"3" {
+				"3" {ping 
 					# URL et fichier pour l'ancienne interface
-					$url = "https://download.scdn.co/SpotifyFull7-8-8.1.exe"
+					$url = "https://spotixplus.fr/files/windows/script/SpotifyFull7-8-8.1.exe"
 					$spotifyInstaller = "$env:TEMP\SpotifyFull7-8-8.1.exe"
 				}
 			}
@@ -969,16 +1013,59 @@ function Install {
 			#$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
 			#$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
 			#Rename-Item -Path $oldFile -NewName $newFile
-			Rename-Item -Path "$env:UserProfile\Desktop\Spotify.lnk" -NewName "$AppNameShort.lnk"
+			#Rename-Item -Path "$env:UserProfile\Desktop\Spotify.lnk" -NewName "$AppNameShort.lnk"
 
 
 			# Renommer le raccourci Spotify du menu démarrer
 			#$oldFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk"
 			#$newFile = "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
 			#Rename-Item -Path $oldFile -NewName $newFile
-			Rename-Item -Path "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk" -NewName "$AppNameShort.lnk"
+			#Rename-Item -Path "$env:AppData\Microsoft\Windows\Start Menu\Programs\Spotify.lnk" -NewName "$AppNameShort.lnk"
+
+			$SpotifyFolder = Join-Path $env:APPDATA "Spotify"
+			$SpotifyExe     = Join-Path $SpotifyFolder "Spotify.exe"
+			$IconPath      = Join-Path $SpotifyFolder "iconapp.ico"
+			$IconUrl       = "https://spotixplus.fr/assets/icons/iconapp.ico"
+			$Desktop       = [Environment]::GetFolderPath("Desktop")
+			$PublicDesktop = [Environment]::GetFolderPath("CommonDesktopDirectory")
+			$ShortcutPath  = Join-Path $Desktop "SpotiX+ Reborn.lnk"
 
 
+			try {
+   				Invoke-WebRequest `
+      			-Uri $IconUrl `
+      			-OutFile $IconPath `
+       			-UseBasicParsing `
+        		-ErrorAction Stop
+
+    		@(
+        		(Join-Path $Desktop "Spotify.lnk"),
+        		(Join-Path $PublicDesktop "Spotify.lnk")
+    		) | ForEach-Object {
+        		Remove-Item -LiteralPath $_ -Force -ErrorAction SilentlyContinue
+    		}
+    		
+			$WshShell = New-Object -ComObject WScript.Shell
+    		$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+    		$Shortcut.TargetPath       = $SpotifyExe
+    		$Shortcut.WorkingDirectory = $SpotifyFolder
+    		$Shortcut.IconLocation     = "$IconPath,0"
+    		$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
+    		$Shortcut.Save()
+
+    		[void][Runtime.InteropServices.Marshal]::ReleaseComObject($Shortcut)
+    		[void][Runtime.InteropServices.Marshal]::ReleaseComObject($WshShell)
+
+    		Start-Process `
+        		-FilePath "$env:WINDIR\System32\ie4uinit.exe" `
+        		-ArgumentList "-show" `
+        		-WindowStyle Hidden `
+       		 	-ErrorAction SilentlyContinue
+		}
+			catch {
+   		 	Write-Host "Erreur pendant la création du raccourci Spotify :" -ForegroundColor Red
+    		Write-Host $_.Exception.Message -ForegroundColor DarkRed
+	}
 			SetTitle (GetTranslation "install-finished")
 			PrintLogo
 			Write-Host (GetTranslation "configuration-finished")
@@ -1034,9 +1121,6 @@ function Uninstall {
 		RemoveIfExists "$env:LocalAppData\Spotify"
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
 		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
-
-		Write-Host (GetTranslation "soggfy-uninstall")
-		RemoveIfExists "$env:LocalAppData/Soggfy"
 
 		Write-Host (GetTranslation "app-uninstalled-successfully")
 		EnterToContinue -DefaultPrompt $true
@@ -1168,45 +1252,51 @@ function Soggfy {
 		EnterToContinue -DefaultPrompt $true
 		return
 	}
-	if (Test-Path -Path "$env:AppData\Spotify\SoggfyUIC.js") {
+	Write-Host (GetTranslation "soggfy-dead")
+	Write-Host (GetTranslation "soggfy-dead1")
+	EnterToContinue -DefaultPrompt $true
+
+}
+
+function SpicetifyH {
+	SetTitle (GetTranslation "spicetify-helper")
+	PrintLogo
+	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
 		SetTitle (GetTranslation "error")
-		Write-Host (GetTranslation "soggfy-already-installed")
+		Write-Host (GetTranslation "uninstall-app-not-found")
 		EnterToContinue -DefaultPrompt $true
 		return
 	}
-	Write-Host (GetTranslation "soggfy-compatible-versions")
-	Write-Host (GetTranslation "soggfy-compatible-versions-v1")
-	Write-Host (GetTranslation "soggfy-compatible-versions-v2")
-	Write-Host (GetTranslation "soggfy-compatible-versions-v3")
-	Write-Host ""
-	Write-Host (GetTranslation "soggfy-warning")
-	EnterToContinue -DefaultPrompt $true
-	Write-Host ""
-	Write-Host (GetTranslation "soggfy-speech")
-	Write-Host ""
-	$confirmation0 = Read-Host -Prompt (GetTranslation "soggfy-confirm")
-	if ($confirmation0 -eq "Y") {
-		StopSpotify
-		Write-Host (GetTranslation "installing-necessary-files")
-		Download -URL "https://spotixplus.com/files/windows/script/dpapi.dll" -Path "$env:AppData\Spotify\dpapi.dll" -Clear $false
-		#2
-		Download -URL "https://spotixplus.com/files/windows/script/SoggfyUIC.js" -Path "$env:AppData\Spotify\SoggfyUIC.js" -Clear $false
 
-		#FFMPEG
-		Write-Host (GetTranslation "installing-ffmpeg")
-		$soggfy1 = "$env:LocalAppData/Soggfy/"
-		if (-not (Test-Path -Path $soggfy1)) {
-			New-Item -Path $soggfy1 -ItemType Directory
-		}
-		$soggfy2 = "$env:LocalAppData/Soggfy/ffmpeg/"
-		if (-not (Test-Path -Path $soggfy2)) {
-			New-Item -Path $soggfy2 -ItemType Directory
-		}
-		Download -URL "https://spotixplus.com/files/windows/script/ffmpeg.exe" -Path "$env:LocalAppData/Soggfy/ffmpeg/ffmpeg.exe" -Clear $false
+	# Fichier trouvé
+	Write-Host (GetTranslation "spicetify-configh") 
+	Write-Host ((
+		(GetTranslation "spicetify-configh1"),
+		"1. $(GetTranslation "spicetify-install")",
+		"2. $(GetTranslation "spicetify-uninstall")",
+		"3. $(GetTranslation "return")"
+	) -join "`n`t")
+	$userChoices = GetUserChoices -validResponses @("1", "2", "3")
+	PrintLogo
+	SetTitle (GetTranslation "spicetify-helper")
 
-		Write-Host (GetTranslation "soggfy-success")
-		Write-Host (GetTranslation "script-will-continue")
-		Start-Sleep -Seconds 3
+	switch ($userChoices.Trim()) {
+		"1" {
+			StopSpotify
+			SetTitle (GetTranslation "spicetify-configuration")
+			Clear-Host
+			[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/spicetify/spicetify-cli/master/install.ps1').Content) }"
+			Write-Host (GetTranslation "spicetify-installed2")
+			EnterToContinue -DefaultPrompt $true
+		}
+		"2" {
+			StopSpotify
+			Write-Host (GetTranslation "spicetify-uninstalling")
+			RemoveIfExists "$env:AppData\spicetify"
+
+			Write-Host (GetTranslation "spicetify-uninstall-done")
+			EnterToContinue -DefaultPrompt $true
+		}
 	}
 }
 
@@ -1228,13 +1318,14 @@ function Main {
 		"1. 💾 $(GetTranslation "lobby-menu1")",
 		"2. 🎶 $(GetTranslation "lobby-menu2")",
 		"3. ⤵️ $(GetTranslation "lobby-menu3")",
-		"4. 🗑️ $(GetTranslation "lobby-menu4")",
-		"5. 🌐 $(GetTranslation "lobby-menu5")",
-		"6. 📨 $(GetTranslation "lobby-menu6")",
-		"7. 👋 $(GetTranslation "lobby-menu7")"
+		"4. 🛒 $(GetTranslation "lobby-menu4")",
+		"5. 🗑️ $(GetTranslation "lobby-menu5")",
+		"6. 🌐 $(GetTranslation "lobby-menu6")",
+		"7. 📨 $(GetTranslation "lobby-menu7")",
+		"8. 👋 $(GetTranslation "lobby-menu8")"
 	) -join "`n`t")
 
-	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8")
+	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8", "9")
 
 	# Exécute les commandes en fonction des réponses
 	switch ($userChoices0.Trim()) {
@@ -1251,26 +1342,30 @@ function Main {
 			Main
 		}
 		"4" {
-			Uninstall
+			SpicetifyH
 			Main
 		}
 		"5" {
-			Write-Host (GetTranslation "lobby-menu5-openning-github")
-			Start-Process "https://github.com/$GithubUser/$GithubRepo"
+			Uninstall
 			Main
 		}
 		"6" {
-			Write-Host (GetTranslation "lobby-menu6-openning-discord")
-			Start-Process $Discord
+			Write-Host (GetTranslation "lobby-menu6-openning-github")
+			Start-Process "https://github.com/$GithubUser/$GithubRepo"
 			Main
 		}
 		"7" {
-			Write-Host (GetTranslation "lobby-menu7-goodbye")
+			Write-Host (GetTranslation "lobby-menu7-openning-discord")
+			Start-Process $Discord
+			Main
+		}
+		"8" {
+			Write-Host (GetTranslation "lobby-menu8-goodbye")
 			Start-Sleep -Seconds 1
 			Stop-Transcript
 			exit
 		}
-		"8" {
+		"9" {
 			InstallDev
 			Main
 		}
