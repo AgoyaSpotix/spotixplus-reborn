@@ -10,7 +10,7 @@ Nous avons donc décidé de prendre le relais, ainsi fut né SpotiX+ Reborn.
 
 ## Téléchargements et installation
 Rendez-vous sur la section [Releases](https://github.com/AgoyaSpotix/spotixplus-reborn/releases/) pour pouvoir télécharger la dernière version du programme.\
-Téléchargez et lancez le fichier `script.ps1`.\
+Téléchargez et lancez le fichier `script.ps1`. en faisant clic droit -> Executer avec PowerShell.\
 Il vous faudra PowerShell 7 pour lancer ce script.\
 Si il n'est pas présent sur votre machine, vous pourrez le lancer avec PowerShell 5 (installé de base sur Windows) et le script vous installera automatiquement PowerShell 7.
 
