@@ -185,7 +185,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 		}
 	}
 
-	Write-Host "Loading..." -ForegroundColor Yellow
+	Write-Host "Loading SpotiX+..." -ForegroundColor Yellow
 	$scriptPath = $MyInvocation.MyCommand.Path
 	if ($scriptPath -like "*$env:LocalAppData\Temp*") {
 		if (-Not (Test-Path $log_dir)) {
