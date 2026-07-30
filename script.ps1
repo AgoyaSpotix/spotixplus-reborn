@@ -147,7 +147,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 
 		if ($confirmation -eq "Y") {
 			# Installation de PowerShell 7
-			$response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" | ConvertFrom-Json
+			$response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" -UseBasicParsing | ConvertFrom-Json
 			$powershellLatestVersion = $response.tag_name.Substring(1)
 
 			SetTitle "PowerShell $powershellLatestVersion"
