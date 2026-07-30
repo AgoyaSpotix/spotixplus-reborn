@@ -2,6 +2,8 @@
 
 ![logo_horizontal](https://raw.githubusercontent.com/AgoyaSpotix/spotixplus-reborn-windows/refs/heads/main/assets/logo_horizontal.png)
 
+*Version Française* | [*English version*](https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/README.md)
+
 ## Qu'est-ce que SpotiX+ Reborn ?
 Il s'agit d'une version modifiée de Spotify, vous permettant de ne plus avoir de pub, passer les titres à l'infini, et bien plus encore !
 
