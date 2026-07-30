@@ -1,7 +1,7 @@
-# Constantes
-$AppNameShort = "SpotiX+ Reborn"
+﻿# Constantes
+$AppNameShort = "SpotiX+"
 $AppName = "$AppNameShort PC Script"
-$Version = "2.1"
+$Version = "2.1.8b"
 $ByPassAdmin = $false
 $NoTranslations = $false
 
@@ -9,6 +9,8 @@ $GithubUser = "AgoyaSpotix"
 $GithubRepo = "spotixplus-reborn"
 $Discord = "https://discord.gg/p3AAf7TUPv"
 
+$WshShell = $null
+$Shortcut = $null
 # Logo fait avec https://patorjk.com/software/taag/
 $Logo = "
        ____                    _     _  __  __
@@ -119,8 +121,8 @@ $localizations = @"
 			"en-US": "Main menu"
 		},
 		"lobby-third-party-apps": {
-			"fr-FR": "Apps tierces utilisées: SpotX CLI, Spicetify",
-			"en-US": "Third party apps used : SpotX CLI, Spicetify"
+			"fr-FR": "Apps tierces utilisées: SpotX CLI, Spicetify, SpotiFLAC",
+			"en-US": "Third party apps used : SpotX CLI, Spicetify, SpotiFLAC"
 		},
 		"lobby-warning": {
 			"fr-FR": "ATTENTION: Ce script utilise votre connexion internet pour fonctionner correctement.`nNe désactivez pas votre connexion internet pendant l'exécution du script.",
@@ -139,38 +141,42 @@ $localizations = @"
 			"en-US": "Enable/Disable high quality"
 		},
 		"lobby-menu3": {
-			"fr-FR": "Activer la fonctionnalité de téléchargement (Broken, alternative)",
-			"en-US": "Enable the download feature (Broken, alternative)"
+			"fr-FR": "Configuration de SpotiFLAC",
+			"en-US": "SpotiFLAC Configuration"
 		},
 		"lobby-menu4": {
 			"fr-FR": "Configuration de Spicetify",
 			"en-US": "Spicetify Configuration"
 		},
 		"lobby-menu5": {
+			"fr-FR": "Créer un raccourci sur le bureau",
+			"en-US": "Create shortcut on your desktop"
+		},
+		"lobby-menu6": {
 			"fr-FR": "Désinstaller $AppNameShort",
 			"en-US": "Uninstall $AppNameShort"
 		},
-		"lobby-menu6": {
+		"lobby-menu7": {
 			"fr-FR": "Ouvrir la page GitHub",
 			"en-US": "Open GitHub Webpage"
 		},
-		"lobby-menu7": {
+		"lobby-menu8": {
 			"fr-FR": "Rejoindre notre serveur Discord",
 			"en-US": "Join our Discord server"
 		},
-		"lobby-menu8": {
+		"lobby-menu9": {
 			"fr-FR": "Fermer le script",
 			"en-US": "Close the script"
 		},
-		"lobby-menu6-openning-github": {
+		"lobby-menu7-openning-github": {
 			"fr-FR": "Ouverture de la page GitHub...",
 			"en-US": "Openning the GitHub Webpage..."
 		},
-		"lobby-menu7-openning-discord": {
+		"lobby-menu8-openning-discord": {
 			"fr-FR": "Ouverture du lien d'invitation Discord...",
 			"en-US": "Openning the Discord join link..."
 		},
-		"lobby-menu8-goodbye": {
+		"lobby-menu9-goodbye": {
 			"fr-FR": "A bientôt !",
 			"en-US": "See you soon !"
 		},
@@ -258,6 +264,10 @@ $localizations = @"
 			"fr-FR": "Téléchargement et installation de Spotify...",
 			"en-US": "Downloading and installing Spotify..."
 		},
+		"spotify-install-warning": {
+			"fr-FR": "Avant de continuer, connectez-vous à votre compte Spotify afin d’éviter les déconnexions répétées.",
+			"en-US": "Before continuing, log in to your Spotify account to avoid repeated disconnections."
+		},
 		"spotify-install-prompt": {
 			"fr-FR": "Une fois Spotify installé, veuillez presser la touche Entrée...",
 			"en-US": "Once Spotify is installed, please press the Enter key..."
@@ -271,8 +281,8 @@ $localizations = @"
 			"en-US": "SpotX Configuration"
 		},
 		"spotx-installed": {
-			"fr-FR": "Script 1/2 installés : SpotiX installé",
-			"en-US": "Script 1/2 installed : SpotiX installed"
+			"fr-FR": "Script 1/2 installés : SpotX",
+			"en-US": "Script 1/2 installed : SpotX"
 		},
 		"spotify-closing": {
 			"fr-FR": "Fermeture de Spotify pour faciliter l'exécution des scripts",
@@ -526,6 +536,14 @@ $localizations = @"
 			"fr-FR": "Configuration de Spicetify",
 			"en-US": "Spicetify Configuration"
 		},
+		"spicetify-ok": {
+			"fr-FR": "Spicetify installé",
+			"en-US": "Spicetify installed"
+		},
+		"spicetify-no": {
+			"fr-FR": "Spicetify non installé",
+			"en-US": "Spicetify not installed"
+		},
 		"spicetify-configh": {
 			"fr-FR": "Vous pouvez installer ou désinstaller Spicetify en cas de problème.",
 			"en-US": "You can install or uninstall Spicetify if you’re experiencing any issues."
@@ -548,7 +566,59 @@ $localizations = @"
 		},
 		"return": {
 			"fr-FR": "Retourner à la page d'accueil",
-			"en-US": "RReturn to the home page"
+			"en-US": "Return to the home page"
+		},
+		"create-shortcut-on-desktop-title": {
+			"fr-FR": "Créer un raccourci sur le bureau",
+			"en-US": "Create shortcut on the desktop"
+		},
+		"create-shortcut-on-desktop": {
+			"fr-FR": "Souhaitez-vous créer un raccourci SpotiX+ sur le bureau ?",
+			"en-US": "Would you like to create a desktop shortcut for SpotiX+?"
+		},
+		"create-shortcut": {
+			"fr-FR": "Créer le raccourci",
+			"en-US": "Create shortcut"
+		},
+		"create-shortcut-done": {
+			"fr-FR": "Le raccourci à était créé sur le bureau !",
+			"en-US": "The shortcut has been created on the desktop!"
+		},
+		"spotiflac": {
+			"fr-FR": "Configuration de SpotiFLAC",
+			"en-US": "SpotiFLAC Configuration"
+		},
+		"spotiflac-confirm": {
+			"fr-FR": "Souhaitez-vous l'installer sur votre PC ?",
+			"en-US": "Would you like to install it on your PC?"
+		},
+		"spotiflac-ok": {
+			"fr-FR": "Installer SpotiFLAC",
+			"en-US": "Install SpotiFLAC"
+		},
+		"spotiflac-error1": {
+			"fr-FR": "Une erreur est survenue avec le dépôt GitHub : aucun fichier exécutable n’a été trouvé. Merci de contacter l’administrateur du script.",
+			"en-US": "An error occurred with the GitHub repository: no executable file was found. Please contact the script administrator."
+		},
+		"spotiflac-error2": {
+		"fr-FR": "Une erreur est survenue lors du téléchargement. Le fichier semble corrompu. Veuillez réessayer dans quelques instants.",
+		"en-US": "An error occurred during the download. The file appears to be corrupted. Please try again in a few moments."
+		},
+		"spotiflac-download": {
+		"fr-FR": "Téléchargement de SpotiFLAC `$(`$Release.tag_name)...",
+		"en-US": "Downloading SpotiFLAC `$(`$Release.tag_name)..."
+		},
+		"spotiflac-done": {
+		"fr-FR": "SpotiFLAC a été installé avec succès !",
+		"en-US": "SpotiFLAC was installed successfully!"
+		},
+		"spotiflac-location": {
+		"fr-FR": "Emplacement : `$SpotiFLACExe",
+		"en-US": "Location : `$SpotiFLACExe"
+		},
+		"spotiflac-install-error": {
+		"fr-FR": "Une erreur est survenue lors de l’installation de SpotiFLAC.",
+		"en-US": "An error occurred while installing SpotiFLAC."
 		}
 	}
 }
@@ -623,7 +693,6 @@ function Download {
 	$bufferSize = 8192  # 8KB
 	$startTime = Get-Date
 	$totalBytesReceived = 0
-
 	$responseStream = $webClient.OpenRead($URL)
 	$fileStream = [System.IO.File]::Create($Path)
 	$buffer = New-Object byte[] $bufferSize
@@ -902,6 +971,7 @@ function Install {
 			$webClient.DownloadFile($url, $spotifyInstaller)
 
 			Start-Process $spotifyInstaller
+			Write-Host (GetTranslation "spotify-install-warning") -ForegroundColor Red
 			Write-Host (GetTranslation "spotify-install-prompt")
 			EnterToContinue
 
@@ -1006,8 +1076,8 @@ function Install {
 			#Qualité audio
 			HighQuality
 
-			#Mode téléchargement
-			Soggfy
+			#SpotiFLAC
+			SpotiFLAC
 
 			# Renommer le raccourci Spotify du bureau
 			#$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
@@ -1028,8 +1098,21 @@ function Install {
 			$IconUrl       = "https://spotixplus.fr/assets/icons/iconapp.ico"
 			$Desktop       = [Environment]::GetFolderPath("Desktop")
 			$PublicDesktop = [Environment]::GetFolderPath("CommonDesktopDirectory")
-			$ShortcutPath  = Join-Path $Desktop "SpotiX+ Reborn.lnk"
+			$ShortcutPath  = Join-Path $Desktop "SpotiX+.lnk"
+			$StartMenu         = [Environment]::GetFolderPath("Programs")
+			$StartMenuFolder   = Join-Path $StartMenu "SpotiX+ Reborn"
+			$StartMenuShortcut = Join-Path $StartMenuFolder "SpotiX+.lnk"
+			$DocumentsFolder  = [Environment]::GetFolderPath("MyDocuments")
+			$SpotiXDocuments  = Join-Path $DocumentsFolder "SpotiX+ Reborn"
+			$DocumentsShortcut = Join-Path $SpotiXDocuments "SpotiX+.lnk"
 
+			# Créer le dossier Documents\SpotiX+ Reborn s’il n’existe pas
+			if (-not (Test-Path -LiteralPath $SpotiXDocuments)) {
+    			New-Item `
+        		-ItemType Directory `
+        		-Path $SpotiXDocuments `
+       		 -Force | Out-Null
+			}
 
 			try {
    				Invoke-WebRequest `
@@ -1038,20 +1121,46 @@ function Install {
        			-UseBasicParsing `
         		-ErrorAction Stop
 
-    		@(
+    		 @(
         		(Join-Path $Desktop "Spotify.lnk"),
-        		(Join-Path $PublicDesktop "Spotify.lnk")
+        		(Join-Path $PublicDesktop "Spotify.lnk"),
+        		(Join-Path $StartMenu "Spotify.lnk"),
+        		(Join-Path $StartMenu "SpotiX+.lnk"),
+        		$ShortcutPath,
+        		$StartMenuShortcut
+
     		) | ForEach-Object {
-        		Remove-Item -LiteralPath $_ -Force -ErrorAction SilentlyContinue
+       			 Remove-Item -LiteralPath $_ -Force -ErrorAction SilentlyContinue
     		}
+
+    		New-Item `
+        		-ItemType Directory `
+        		-Path $StartMenuFolder `
+        		-Force | Out-Null
     		
 			$WshShell = New-Object -ComObject WScript.Shell
-    		$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-    		$Shortcut.TargetPath       = $SpotifyExe
-    		$Shortcut.WorkingDirectory = $SpotifyFolder
-    		$Shortcut.IconLocation     = "$IconPath,0"
-    		$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
-    		$Shortcut.Save()
+
+			$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+			$Shortcut.TargetPath       = $SpotifyExe
+			$Shortcut.WorkingDirectory = $SpotifyFolder
+			$Shortcut.IconLocation     = "$IconPath,0"
+			$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
+			$Shortcut.Save()
+
+			$Shortcut = $WshShell.CreateShortcut($StartMenuShortcut)
+			$Shortcut.TargetPath       = $SpotifyExe
+			$Shortcut.WorkingDirectory = $SpotifyFolder
+			$Shortcut.IconLocation     = "$IconPath,0"
+			$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
+			$Shortcut.Save()
+
+			# Raccourci dans Documents\SpotiX+ Reborn
+			$Shortcut = $WshShell.CreateShortcut($DocumentsShortcut)
+			$Shortcut.TargetPath       = $SpotifyExe
+			$Shortcut.WorkingDirectory = $SpotifyFolder
+			$Shortcut.IconLocation     = "$IconPath,0"
+			$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
+			$Shortcut.Save()
 
     		[void][Runtime.InteropServices.Marshal]::ReleaseComObject($Shortcut)
     		[void][Runtime.InteropServices.Marshal]::ReleaseComObject($WshShell)
@@ -1120,7 +1229,7 @@ function Uninstall {
 		RemoveIfExists "$env:AppData\Spotify"
 		RemoveIfExists "$env:LocalAppData\Spotify"
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
-		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\$AppNameShort.lnk"
+		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\SpotiX+ Reborn\$AppNameShort.lnk"
 
 		Write-Host (GetTranslation "app-uninstalled-successfully")
 		EnterToContinue -DefaultPrompt $true
@@ -1241,10 +1350,10 @@ function HighQuality {
 	}
 }
 
-function Soggfy {
+function SpotiFLAC {
 	#Mode téléchargement
 	Clear-Host
-	SetTitle (GetTranslation "soggfy")
+	SetTitle (GetTranslation "spotiflac")
 	PrintLogo
 	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
 		SetTitle (GetTranslation "error")
@@ -1254,7 +1363,160 @@ function Soggfy {
 	}
 	Write-Host (GetTranslation "soggfy-dead")
 	Write-Host (GetTranslation "soggfy-dead1")
-	EnterToContinue -DefaultPrompt $true
+	Write-Host ""
+	Write-Host ((
+		(GetTranslation "spotiflac-confirm"),
+		"1. $(GetTranslation "spotiflac-ok")",
+		"2. $(GetTranslation "return")"
+	) -join "`n`t")
+	$userChoices = GetUserChoices -validResponses @("1", "2")
+	switch ($userChoices.Trim()) {
+		"1" {
+    $DocumentsFolder = [Environment]::GetFolderPath("MyDocuments")
+    $SpotiXFolder    = Join-Path $DocumentsFolder "SpotiX+ Reborn"
+    $SpotiFLACExe  = Join-Path $SpotiXFolder "SpotiFLAC.exe"
+	$Desktop       = [Environment]::GetFolderPath("Desktop")
+	$PublicDesktop = [Environment]::GetFolderPath("CommonDesktopDirectory")
+	$ShortcutPath  = Join-Path $Desktop "SpotiFLAC.lnk"
+    $TemporaryFile = Join-Path $env:TEMP "SpotiFLAC.download"
+    $StartMenu         = [Environment]::GetFolderPath("Programs")
+    $StartMenuFolder   = Join-Path $StartMenu "SpotiX+ Reborn"
+    $StartMenuShortcut = Join-Path $StartMenuFolder "SpotiFLAC.lnk"
+    $GitHubApi = "https://api.github.com/repos/spotbye/SpotiFLAC/releases/latest"
+
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = `
+            [Net.SecurityProtocolType]::Tls12
+
+        if (-not (Test-Path -LiteralPath $SpotiXFolder)) {
+            New-Item `
+                -ItemType Directory `
+                -Path $SpotiXFolder `
+                -Force | Out-Null
+        }
+        if (-not (Test-Path -LiteralPath $StartMenuFolder)) {
+            New-Item `
+                -ItemType Directory `
+                -Path $StartMenuFolder `
+                -Force | Out-Null
+        }
+
+		#check la derniere ver de spotiflac
+        $Release = Invoke-RestMethod `
+            -Uri $GitHubApi `
+            -Headers @{
+                "Accept"               = "application/vnd.github+json"
+                "User-Agent"           = "SpotiXPlus-Reborn"
+                "X-GitHub-Api-Version" = "2022-11-28"
+            } `
+            -ErrorAction Stop
+
+        $Asset = $Release.assets |
+            Where-Object {
+                $_.name -eq "SpotiFLAC.exe"
+            } |
+            Select-Object -First 1
+
+        if (-not $Asset) {
+            $Asset = $Release.assets |
+                Where-Object {
+                    $_.name -match "(?i)^SpotiFLAC.*\.exe$" -and
+                    $_.name -notmatch "(?i)setup|installer"
+                } |
+                Select-Object -First 1
+        }
+        if (-not $Asset) {
+            Write-Host (GetTranslation "spotiflac-error1") ForegroundColor Red
+			return
+        }
+
+        Remove-Item `
+            -LiteralPath $TemporaryFile `
+            -Force `
+            -ErrorAction SilentlyContinue
+
+		Write-Host ""
+        Write-Host (GetTranslation "spotiflac-download").Replace("`$(`$Release.tag_name)", $($Release.tag_name)) `
+            -ForegroundColor Cyan
+
+        Invoke-WebRequest `
+            -Uri $Asset.browser_download_url `
+            -OutFile $TemporaryFile `
+            -UseBasicParsing `
+            -Headers @{
+                "User-Agent" = "SpotiXPlus-Reborn"
+            } `
+            -ErrorAction Stop
+
+        if (
+            -not (Test-Path -LiteralPath $TemporaryFile) -or
+            (Get-Item -LiteralPath $TemporaryFile).Length -lt 100KB
+        ) {
+            Write-Host (GetTranslation "spotiflac-error2") ForegroundColor Red
+			return
+        }
+
+        Move-Item `
+            -LiteralPath $TemporaryFile `
+            -Destination $SpotiFLACExe `
+            -Force `
+            -ErrorAction Stop
+        Remove-Item `
+            -LiteralPath $StartMenuShortcut `
+            -Force `
+            -ErrorAction SilentlyContinue
+
+        $WshShell = New-Object -ComObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut($StartMenuShortcut)
+        $Shortcut.TargetPath       = $SpotiFLACExe
+        $Shortcut.WorkingDirectory = $SpotiXFolder
+        $Shortcut.IconLocation     = "$SpotiFLACExe,0"
+        $Shortcut.Description      = "SpotiFLAC - https://github.com/spotbye/SpotiFLAC"
+        $Shortcut.WindowStyle      = 1
+        $Shortcut.Save()
+
+		$WshShell = New-Object -ComObject WScript.Shell
+		$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+		$Shortcut.TargetPath       = $SpotiFLACExe
+		$Shortcut.WorkingDirectory = $SpotiXFolder
+		$Shortcut.IconLocation     = "$SpotiFLACExe,0"
+		$Shortcut.Description      = "SpotiFLAC - https://github.com/spotbye/SpotiFLAC"
+		$Shortcut.Save()
+
+        Write-Host (GetTranslation "spotiflac-done") `
+            -ForegroundColor Green
+
+        Write-Host (GetTranslation "spotiflac-location").Replace("`$SpotiFLACExe", $SpotiFLACExe) `
+            -ForegroundColor DarkGray
+			EnterToContinue
+    }
+    catch {
+        Remove-Item `
+            -LiteralPath $TemporaryFile `
+            -Force `
+            -ErrorAction SilentlyContinue
+
+        Write-Host ""
+        Write-Host (GetTranslation "spotiflac-install-error") `
+            -ForegroundColor Red
+
+        Write-Host $_.Exception.Message `
+            -ForegroundColor DarkRed
+    }
+    finally {
+        if ($Shortcut) {
+            [void][Runtime.InteropServices.Marshal]::ReleaseComObject(
+                $Shortcut
+            )
+        }
+        if ($WshShell) {
+            [void][Runtime.InteropServices.Marshal]::ReleaseComObject(
+                $WshShell
+            )
+        }
+    }
+  }
+}
 
 }
 
@@ -1268,7 +1530,17 @@ function SpicetifyH {
 		return
 	}
 
-	# Fichier trouvé
+	#check si spicetify est installer
+	$SpicetifyExe = Join-Path $env:LOCALAPPDATA "spicetify\spicetify.exe"
+
+	if (Test-Path -LiteralPath $SpicetifyExe) {
+		Write-Host (GetTranslation "spicetify-ok")  -ForegroundColor Green
+	}
+	else {
+		Write-Host (GetTranslation "spicetify-no")  -ForegroundColor Red
+	}
+
+	Write-Host ""
 	Write-Host (GetTranslation "spicetify-configh") 
 	Write-Host ((
 		(GetTranslation "spicetify-configh1"),
@@ -1300,6 +1572,117 @@ function SpicetifyH {
 	}
 }
 
+function CreateShortcutOnDesktop {
+	SetTitle (GetTranslation "create-shortcut-on-desktop-title")
+	PrintLogo
+	if (-not (Test-Path -Path "$env:AppData\Spotify\config.need")) {
+		SetTitle (GetTranslation "error")
+		Write-Host (GetTranslation "uninstall-app-not-found")
+		EnterToContinue -DefaultPrompt $true
+		return
+	}
+
+	Write-Host ((
+		(GetTranslation "create-shortcut-on-desktop"),
+		"1. $(GetTranslation "create-shortcut")",
+		"2. $(GetTranslation "return")"
+	) -join "`n`t")
+	$userChoices = GetUserChoices -validResponses @("1", "2")
+	PrintLogo
+	SetTitle (GetTranslation "create-shortcut-on-desktop-title")
+
+	switch ($userChoices.Trim()) {
+		"1" {
+			SetTitle (GetTranslation "create-shortcut-on-desktop-title")
+			$SpotifyFolder = Join-Path $env:APPDATA "Spotify"
+			$SpotifyExe     = Join-Path $SpotifyFolder "Spotify.exe"
+			$IconPath      = Join-Path $SpotifyFolder "iconapp.ico"
+			$IconUrl       = "https://spotixplus.fr/assets/icons/iconapp.ico"
+			$Desktop       = [Environment]::GetFolderPath("Desktop")
+			$PublicDesktop = [Environment]::GetFolderPath("CommonDesktopDirectory")
+			$ShortcutPath  = Join-Path $Desktop "SpotiX+.lnk"
+			$StartMenu         = [Environment]::GetFolderPath("Programs")
+			$StartMenuFolder   = Join-Path $StartMenu "SpotiX+ Reborn"
+			$StartMenuShortcut = Join-Path $StartMenuFolder "SpotiX+.lnk"
+			$DocumentsFolder  = [Environment]::GetFolderPath("MyDocuments")
+			$SpotiXDocuments  = Join-Path $DocumentsFolder "SpotiX+ Reborn"
+			$DocumentsShortcut = Join-Path $SpotiXDocuments "SpotiX+.lnk"
+
+			# Créer le dossier Documents\SpotiX+ Reborn s’il n’existe pas
+			if (-not (Test-Path -LiteralPath $SpotiXDocuments)) {
+    			New-Item `
+        		-ItemType Directory `
+        		-Path $SpotiXDocuments `
+       		 -Force | Out-Null
+			}
+
+			try {
+   				Invoke-WebRequest `
+      			-Uri $IconUrl `
+      			-OutFile $IconPath `
+       			-UseBasicParsing `
+        		-ErrorAction Stop
+
+    		 @(
+        		(Join-Path $Desktop "Spotify.lnk"),
+        		(Join-Path $PublicDesktop "Spotify.lnk"),
+        		(Join-Path $StartMenu "Spotify.lnk"),
+        		(Join-Path $StartMenu "SpotiX+.lnk"),
+        		$ShortcutPath,
+        		$StartMenuShortcut
+
+    		) | ForEach-Object {
+       			 Remove-Item -LiteralPath $_ -Force -ErrorAction SilentlyContinue
+    		}
+
+    		New-Item `
+        		-ItemType Directory `
+        		-Path $StartMenuFolder `
+        		-Force | Out-Null
+    		
+			$WshShell = New-Object -ComObject WScript.Shell
+
+			$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+			$Shortcut.TargetPath       = $SpotifyExe
+			$Shortcut.WorkingDirectory = $SpotifyFolder
+			$Shortcut.IconLocation     = "$IconPath,0"
+			$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
+			$Shortcut.Save()
+
+			$Shortcut = $WshShell.CreateShortcut($StartMenuShortcut)
+			$Shortcut.TargetPath       = $SpotifyExe
+			$Shortcut.WorkingDirectory = $SpotifyFolder
+			$Shortcut.IconLocation     = "$IconPath,0"
+			$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
+			$Shortcut.Save()
+
+			# Raccourci dans Documents\SpotiX+ Reborn
+			$Shortcut = $WshShell.CreateShortcut($DocumentsShortcut)
+			$Shortcut.TargetPath       = $SpotifyExe
+			$Shortcut.WorkingDirectory = $SpotifyFolder
+			$Shortcut.IconLocation     = "$IconPath,0"
+			$Shortcut.Description      = "SpotiX+ Reborn by Voltan, made with <3"
+			$Shortcut.Save()
+
+    		[void][Runtime.InteropServices.Marshal]::ReleaseComObject($Shortcut)
+    		[void][Runtime.InteropServices.Marshal]::ReleaseComObject($WshShell)
+
+    		Start-Process `
+        		-FilePath "$env:WINDIR\System32\ie4uinit.exe" `
+        		-ArgumentList "-show" `
+        		-WindowStyle Hidden `
+       		 	-ErrorAction SilentlyContinue
+		}
+			catch {
+   		 	Write-Host "Erreur pendant la création du raccourci Spotify :" -ForegroundColor Red
+    		Write-Host $_.Exception.Message -ForegroundColor DarkRed
+	}
+			Write-Host (GetTranslation "create-shortcut-done")
+			EnterToContinue -DefaultPrompt $true
+		}
+	}
+}
+
 function Main {
 	# Changement nom fenêtre
 	SetTitle (GetTranslation "lobby")
@@ -1319,10 +1702,11 @@ function Main {
 		"2. 🎶 $(GetTranslation "lobby-menu2")",
 		"3. ⤵️ $(GetTranslation "lobby-menu3")",
 		"4. 🛒 $(GetTranslation "lobby-menu4")",
-		"5. 🗑️ $(GetTranslation "lobby-menu5")",
-		"6. 🌐 $(GetTranslation "lobby-menu6")",
-		"7. 📨 $(GetTranslation "lobby-menu7")",
-		"8. 👋 $(GetTranslation "lobby-menu8")"
+		"5. 💻​ $(GetTranslation "lobby-menu5")",
+		"6. 🗑️ $(GetTranslation "lobby-menu6")",
+		"7. 🌐 $(GetTranslation "lobby-menu7")",
+		"8. 📨 $(GetTranslation "lobby-menu8")",
+		"9. 👋 $(GetTranslation "lobby-menu9")"
 	) -join "`n`t")
 
 	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8", "9")
@@ -1338,7 +1722,7 @@ function Main {
 			Main
 		}
 		"3" {
-			Soggfy
+			SpotiFLAC
 			Main
 		}
 		"4" {
@@ -1346,28 +1730,39 @@ function Main {
 			Main
 		}
 		"5" {
-			Uninstall
+			CreateShortcutOnDesktop
 			Main
 		}
 		"6" {
-			Write-Host (GetTranslation "lobby-menu6-openning-github")
-			Start-Process "https://github.com/$GithubUser/$GithubRepo"
+			Uninstall
 			Main
 		}
 		"7" {
-			Write-Host (GetTranslation "lobby-menu7-openning-discord")
-			Start-Process $Discord
+			Write-Host (GetTranslation "lobby-menu7-openning-github")
+			Start-Process "https://github.com/$GithubUser/$GithubRepo"
 			Main
 		}
 		"8" {
-			Write-Host (GetTranslation "lobby-menu8-goodbye")
+			Write-Host (GetTranslation "lobby-menu8-openning-discord")
+			Start-Process $Discord
+			Main
+		}
+		"9" {
+			Write-Host (GetTranslation "lobby-menu9-goodbye")
 			Start-Sleep -Seconds 1
 			Stop-Transcript
 			exit
 		}
-		"9" {
+		"10" {
 			InstallDev
 			Main
+		}
+		"11" {
+			Main
+		}
+		"99" {
+			CheckUpdate
+			main
 		}
 	}
 }
