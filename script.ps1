@@ -187,8 +187,7 @@ if ($args -notcontains "-FromLauncher") {
                 $url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
                 $fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
 
-                $webClient = New-Object System.Net.WebClient
-                $webClient.DownloadFile($url, $fichierLocal)
+				Download -URL $url -Path $fichierLocal -Clear $false
 
                 if (Test-Path $fichierLocal) {
                     Write-Host "Download finished, installing..." -ForegroundColor Green
