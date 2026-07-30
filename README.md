@@ -2,6 +2,7 @@
 
 ![logo_horizontal](https://raw.githubusercontent.com/AgoyaSpotix/spotixplus-reborn-windows/refs/heads/main/assets/logo_horizontal.png)
 
+*English version* | [*Version Française*](https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/README-french.md)
 ## What is SpotiX+ Reborn?
 It is a modified version of Spotify that allows you to listen ad-free, skip tracks infinitely, and much more!
 
