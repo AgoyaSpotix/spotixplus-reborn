@@ -124,83 +124,118 @@ Start-Transcript -Path $log_file_dir
 # PowerShell 7 pas installé => demande à l'utilisateur de l'installer
 # PowerShell 7 est installé => exécute le script avec PowerShell 7
 function GetPowershellPath {
-	$powershellRetailPath  = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
-	$powershellPreviewPath = "$env:ProgramFiles\PowerShell\7-preview\pwsh.exe"
+    $pathsToTest = @(
+        # Version MSI
+        "$env:ProgramFiles\PowerShell\7\pwsh.exe",
+        "$env:ProgramFiles\PowerShell\7-preview\pwsh.exe",
+        
+        # Version MSIX
+        "$env:LOCALAPPDATA\Microsoft\WindowsApps\pwsh.exe",
+        
+        # Version MSI  (user level)
+        "$env:LOCALAPPDATA\Programs\PowerShell\7\pwsh.exe",
+        "$env:LOCALAPPDATA\Programs\PowerShell\7-preview\pwsh.exe"
+    )
 
-	if (Test-Path $powershellRetailPath) {
-		return $powershellRetailPath
-	}
-	if (Test-Path $powershellPreviewPath) {
-		return $powershellPreviewPath
-	}
-	return $null
+    foreach ($path in $pathsToTest) {
+        if (Test-Path $path -PathType Leaf) {
+            return $path
+        }
+    }
+
+    $fallbackCommand = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if ($fallbackCommand) {
+        return $fallbackCommand.Source
+    }
+
+    return $null
 }
 
-if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -lt 7)) {
-	$powershellPath = GetPowershellPath
+if ($args -notcontains "-FromLauncher") {
+    
+    # Get the PowerShell path correctly whether we are already in PS7 or not
+    if ($PSVersionTable.PSVersion.Major -ge 7) {
+        $powershellPath = (Get-Process -Id $PID).Path
+    } else {
+        $powershellPath = GetPowershellPath
+    }
 
-	if (-not $powershellPath) {
-		SetTitle "Error"
-		Clear-Host
-		Write-Host "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ?" -ForegroundColor Red
-		$confirmation = Read-Host -Prompt "(Y/N) "
+    if (-not $powershellPath) {
+        SetTitle "Error"
+        Clear-Host
+        Write-Host "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ?" -ForegroundColor Red
+        $confirmation = Read-Host -Prompt "(Y/N) "
 
-		if ($confirmation -eq "Y") {
-			# Installation de PowerShell 7
-			$response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" -UseBasicParsing | ConvertFrom-Json
-			$powershellLatestVersion = $response.tag_name.Substring(1)
+        if ($confirmation -eq "Y") {
+            Clear-Host
+        
+            if (Get-Command winget -ErrorAction SilentlyContinue) {
+                Write-Host "Download and installation of PowerShell 7 via Winget..." -ForegroundColor Green
+                Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
+                $wingetArgs = "install --id Microsoft.PowerShell --exact --silent --accept-package-agreements --accept-source-agreements"
+                Start-Process -FilePath "winget" -ArgumentList $wingetArgs -Wait -NoNewWindow
+            } else {
+                Write-Host "Winget not found. This is normal if you're running Windows 8.1 ou Windows 10 LTSC." -ForegroundColor Yellow
+                Write-Host "Falling back to GitHub API..." -ForegroundColor Yellow
+                $response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" -UseBasicParsing | ConvertFrom-Json
+                $powershellLatestVersion = $response.tag_name.Substring(1)
 
-			SetTitle "PowerShell $powershellLatestVersion"
-			Clear-Host
-			Write-Host "Download starting for PowerShell $powershellLatestVersion..." -ForegroundColor Green
-			Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
-			$url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
-			$fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
+                SetTitle "PowerShell $powershellLatestVersion"
+                Clear-Host
+                Write-Host "Download starting for PowerShell $powershellLatestVersion..." -ForegroundColor Green
+                Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
+                $url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
+                $fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
 
-			$webClient = New-Object System.Net.WebClient
-			$webClient.DownloadFile($url, $fichierLocal)
+                $webClient = New-Object System.Net.WebClient
+                $webClient.DownloadFile($url, $fichierLocal)
 
-			if (Test-Path $fichierLocal) {
-				Write-Host "Download finished, installing..." -ForegroundColor Green
-				Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$fichierLocal`" /quiet" -Verb RunAs -Wait
-				$powershellPath = GetPowershellPath
-				if (-not $powershellPath) {
-					Write-Host "An error occured during the installation." -ForegroundColor Red
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				}
-			} else {
-				Write-Host "An error occured during the downloading." -ForegroundColor Red
-				EnterToContinue -DefaultPrompt $true
-				Stop-Transcript
-				exit
-			}
-		} else {
-			Clear-Host
-			Write-Host "You can close this window by pressing Enter." -ForegroundColor Yellow -NoNewLine
-			EnterToContinue -DefaultPrompt $true
-			Stop-Transcript
-			exit
-		}
-	}
+                if (Test-Path $fichierLocal) {
+                    Write-Host "Download finished, installing..." -ForegroundColor Green
+                    Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$fichierLocal`" /quiet" -Verb RunAs -Wait
+                } else {
+                    Write-Host "An error occured during the downloading." -ForegroundColor Red
+                    EnterToContinue -DefaultPrompt $true
+                    Stop-Transcript
+                    exit
+                }
+            }
 
-	Write-Host "Loading SpotiX+..." -ForegroundColor Yellow
-	$scriptPath = $MyInvocation.MyCommand.Path
-	if ($scriptPath -like "*$env:LocalAppData\Temp*") {
-		if (-Not (Test-Path $log_dir)) {
-			New-Item -Path $log_dir -ItemType Directory -Force
-		}
-		$newScriptPath = Join-Path $log_dir (Split-Path -Leaf $scriptPath)
-		Write-Host "Moving the script at this path : $newScriptPath" -ForegroundColor Yellow
-		Write-Host "Launching the script..." -ForegroundColor Yellow
-		Copy-Item -Path $scriptPath -Destination $newScriptPath -Force
-		$scriptPath = $newScriptPath
-	}
+            # Vérification post-installation
+            $powershellPath = GetPowershellPath
+            if (-not $powershellPath) {
+                Write-Host "An error occured during the installation." -ForegroundColor Red
+                EnterToContinue -DefaultPrompt $true
+                Stop-Transcript
+                exit
+            }
+        } else {
+            Clear-Host
+            Write-Host "You can close this window by pressing Enter." -ForegroundColor Yellow -NoNewLine
+            EnterToContinue -DefaultPrompt $true
+            Stop-Transcript
+            exit
+        }
+    }
 
-	Start-Process $powershellPath -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`" -FromLauncher"
-	exit
+    Write-Host "Loading SpotiX+..." -ForegroundColor Yellow
+    $scriptPath = $MyInvocation.MyCommand.Path
+    if ($scriptPath -like "*$env:LocalAppData\Temp*") {
+        if (-Not (Test-Path $log_dir)) {
+            New-Item -Path $log_dir -ItemType Directory -Force
+        }
+        $newScriptPath = Join-Path $log_dir (Split-Path -Leaf $scriptPath)
+        Write-Host "Moving the script at this path : $newScriptPath" -ForegroundColor Yellow
+        Write-Host "Launching the script..." -ForegroundColor Yellow
+        Copy-Item -Path $scriptPath -Destination $newScriptPath -Force
+        $scriptPath = $newScriptPath
+    }
+
+    # Exit the boostrapper and lauch the script with PowerShell 7
+    Start-Process $powershellPath -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`" -FromLauncher"
+    exit
 }
+
 
 $localizations = @"
 {
@@ -572,6 +607,10 @@ $localizations = @"
 		"spicetify-uninstalling": {
 			"fr-FR": "Suppresion de Spicetify...",
 			"en-US": "Deleting Spicetify..."
+		},
+		'spotiflac-uninstalling': {
+			"fr-FR": "Suppresion de SpotiFLAC...",
+			"en-US": "Deleting SpotiFLAC..."
 		},
 		"spotify-uninstall-complete": {
 			"fr-FR": "Suppresion des résidus de Spotify...",
@@ -1204,7 +1243,14 @@ function Uninstall {
 
 		# Suppression des dossiers/fichiers
 		Write-Host (GetTranslation "spotify-uninstall")
-		Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
+		#Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
+		#Start-Process -FilePath "$env:AppData\Spotify\uninstall.exe" -NoNewWindow -Wait
+		if (Test-Path "$env:AppData\Spotify\uninstall.exe") {
+			Start-Process -FilePath "$env:AppData\Spotify\uninstall.exe" -NoNewWindow -Wait
+		}
+		else {
+			Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
+		}
 		if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
 			Write-Host (GetTranslation "spotify-uninstall-fail") -Foregroundcolor Red
 			EnterToContinue
@@ -1229,6 +1275,9 @@ function Uninstall {
 		RemoveIfExists "$env:LocalAppData\Spotify"
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
 		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\SpotiX+ Reborn\$AppNameShort.lnk"
+
+		Write-Host (GetTranslation "spotiflac-uninstall")
+		RemoveIfExists "$env:UserProfile\Documents\SpotiX+ Reborn"
 
 		Write-Host (GetTranslation "app-uninstalled-successfully")
 		EnterToContinue -DefaultPrompt $true
