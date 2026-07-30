@@ -1287,7 +1287,7 @@ function Uninstall {
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
 		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\SpotiX+ Reborn"
 
-		Write-Host (GetTranslation "spotiflac-uninstall")
+		Write-Host (GetTranslation "spotiflac-uninstalling")
 		RemoveIfExists "$env:UserProfile\Documents\SpotiX+ Reborn"
 		RemoveIfExists "$env:UserProfile\Desktop\SpotiFLAC.lnk"
 		RemoveIfExists "$env:AppData\SpotiFLAC.exe"
@@ -1549,6 +1549,7 @@ function SpotiFLAC {
 
         Write-Host (GetTranslation "spotiflac-location").Replace("`$SpotiFLACExe", $SpotiFLACExe) `
             -ForegroundColor DarkGray
+		Write-Host (GetTranslation "enter-to-continue")
 			EnterToContinue
     }
     catch {
