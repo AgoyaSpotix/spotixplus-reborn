@@ -142,8 +142,8 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 	if (-not $powershellPath) {
 		SetTitle "Error"
 		Clear-Host
-		Write-Host "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ? (Y/N)" -ForegroundColor Red
-		$confirmation = Read-Host -Prompt "Type "
+		Write-Host "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ?" -ForegroundColor Red
+		$confirmation = Read-Host -Prompt "(Y/N) "
 
 		if ($confirmation -eq "Y") {
 			# Installation de PowerShell 7
@@ -153,6 +153,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 			SetTitle "PowerShell $powershellLatestVersion"
 			Clear-Host
 			Write-Host "Download starting for PowerShell $powershellLatestVersion..." -ForegroundColor Green
+			Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
 			$url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
 			$fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
 
@@ -161,9 +162,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 
 			if (Test-Path $fichierLocal) {
 				Write-Host "Download finished, installing..." -ForegroundColor Green
-				Start-Process $fichierLocal
-				Write-Host "Once the installation is over, press Enter..." -ForegroundColor Green
-				EnterToContinue
+				Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$fichierLocal`" /quiet" -Verb RunAs -Wait
 				$powershellPath = GetPowershellPath
 				if (-not $powershellPath) {
 					Write-Host "An error occured during the installation." -ForegroundColor Red
