@@ -834,6 +834,14 @@ $localizations = @"
 $language_id = (Get-Culture).Name
 $language_id_defaulted = $localizations["languages_default_regions"][$language_id.Substring(0, 2)]
 
+function RemoveIfExists {
+	param (
+		[string] $Path
+	)
+	if (Test-Path -Path $Path) {
+		Remove-Item $Path -Recurse
+	}
+}
 function GetTranslation {
 	param (
 		[string] $string_id
@@ -1277,10 +1285,12 @@ function Uninstall {
 		RemoveIfExists "$env:AppData\Spotify"
 		RemoveIfExists "$env:LocalAppData\Spotify"
 		RemoveIfExists "$env:UserProfile\Desktop\$AppNameShort.lnk"
-		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\SpotiX+ Reborn\$AppNameShort.lnk"
+		RemoveIfExists "$env:AppData\Microsoft\Windows\Start Menu\Programs\SpotiX+ Reborn"
 
 		Write-Host (GetTranslation "spotiflac-uninstall")
 		RemoveIfExists "$env:UserProfile\Documents\SpotiX+ Reborn"
+		RemoveIfExists "$env:UserProfile\Desktop\SpotiFLAC.lnk"
+		RemoveIfExists "$env:AppData\SpotiFLAC.exe"
 
 		Write-Host (GetTranslation "app-uninstalled-successfully")
 		EnterToContinue -DefaultPrompt $true
