@@ -187,7 +187,7 @@ if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -
 
 	Write-Host "Loading..." -ForegroundColor Yellow
 	$scriptPath = $MyInvocation.MyCommand.Path
-	if ($scriptPath -match "$env:LocalAppData\Temp") {
+	if ($scriptPath -like "*$env:LocalAppData\Temp*") {
 		if (-Not (Test-Path $log_dir)) {
 			New-Item -Path $log_dir -ItemType Directory -Force
 		}
