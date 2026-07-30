@@ -33,6 +33,176 @@ $Logo = "
 # Paramètres PowerShell
 $ErrorActionPreference = "Continue"
 
+function EnterToContinue {
+	param (
+		[bool] $DefaultPrompt = $false
+	)
+	if ($DefaultPrompt) {
+		Write-Host "Press Enter to continue..." -NoNewLine
+	}
+	$Host.UI.ReadLine()
+}
+
+function SetTitle {
+	param (
+		[string] $Name
+	)
+	$Host.UI.RawUI.WindowTitle = "$AppName v$Version - $Name"
+}
+
+function StopSpotify {
+	$spotify = Get-Process -Name spotify -ErrorAction SilentlyContinue
+	if ($spotify) {
+		Stop-Process $spotify
+	}
+}
+
+function RemoveIfExists {
+	param (
+		[string] $Path
+	)
+	if (Test-Path -Path $Path) {
+		Remove-Item $Path -Recurse
+	}
+}
+
+function Download {
+	param (
+		[string] $URL,
+		[string] $Path,
+		[bool] $Clear = $true
+	)
+	$webClient = New-Object System.Net.WebClient
+	$bufferSize = 8192  # 8KB
+	$startTime = Get-Date
+	$totalBytesReceived = 0
+	$responseStream = $webClient.OpenRead($URL)
+	$fileStream = [System.IO.File]::Create($Path)
+	$buffer = New-Object byte[] $bufferSize
+	$totalBytes = $webClient.ResponseHeaders["Content-Length"]
+	$bytesReceived = 0
+
+	while (($readBytes = $responseStream.Read($buffer, 0, $bufferSize)) -gt 0) {
+		$fileStream.Write($buffer, 0, $readBytes)
+		$totalBytesReceived += $readBytes
+		$timeElapsed = (Get-Date) - $startTime
+		$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
+		$percentComplete = ($totalBytesReceived / $totalBytes) * 100
+		if ($Clear) {
+			Clear-Host
+		}
+		Write-Progress -Activity "Downloading" -Status "$([math]::Round($percentComplete, 2))% done" -PercentComplete $percentComplete
+	}
+
+	$responseStream.Close()
+	$fileStream.Close()
+}
+
+# Titre fenêtre
+SetTitle "Loading"
+
+# Change de répertoire
+if ($PSScriptRoot) {
+	Set-Location $PSScriptRoot
+}
+
+# Génére un nom de fichier de log unique basé sur la date et l'heure
+$date = Get-Date -Format "yyyyMMdd_HHmmss"
+$log_dir = "$(Get-Location)\SpotiX-Logs"
+$log_file_name = "logs_$date.txt"
+$log_file_dir = "$log_dir\$log_file_name"
+
+# Crée le répertoire nécessaire pour les logs
+if (-not (Test-Path -Path $log_dir)) {
+	New-Item -Path $log_dir -ItemType Directory
+}
+
+# Commencement des logs
+Start-Transcript -Path $log_file_dir
+
+# Vérifie si PowerShell 7 est installé
+# PowerShell 7 pas installé => demande à l'utilisateur de l'installer
+# PowerShell 7 est installé => exécute le script avec PowerShell 7
+function GetPowershellPath {
+	$powershellRetailPath  = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
+	$powershellPreviewPath = "$env:ProgramFiles\PowerShell\7-preview\pwsh.exe"
+
+	if (Test-Path $powershellRetailPath) {
+		return $powershellRetailPath
+	}
+	if (Test-Path $powershellPreviewPath) {
+		return $powershellPreviewPath
+	}
+	return $null
+}
+
+if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -lt 7)) {
+	$powershellPath = GetPowershellPath
+
+	if (-not $powershellPath) {
+		SetTitle "Error"
+		Clear-Host
+		Write-Host "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ? (Y/N)" -ForegroundColor Red
+		$confirmation = Read-Host -Prompt "Type "
+
+		if ($confirmation -eq "Y") {
+			# Installation de PowerShell 7
+			$response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" | ConvertFrom-Json
+			$powershellLatestVersion = $response.tag_name.Substring(1)
+
+			SetTitle "PowerShell $powershellLatestVersion"
+			Clear-Host
+			Write-Host "Download starting for PowerShell $powershellLatestVersion..." -ForegroundColor Green
+			$url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
+			$fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
+
+			$webClient = New-Object System.Net.WebClient
+			$webClient.DownloadFile($url, $fichierLocal)
+
+			if (Test-Path $fichierLocal) {
+				Write-Host "Download finished, installing..." -ForegroundColor Green
+				Start-Process $fichierLocal
+				Write-Host "Once the installation is over, press Enter..." -ForegroundColor Green
+				EnterToContinue
+				$powershellPath = GetPowershellPath
+				if (-not $powershellPath) {
+					Write-Host "An error occured during the installation." -ForegroundColor Red
+					EnterToContinue -DefaultPrompt $true
+					Stop-Transcript
+					exit
+				}
+			} else {
+				Write-Host "An error occured during the downloading." -ForegroundColor Red
+				EnterToContinue -DefaultPrompt $true
+				Stop-Transcript
+				exit
+			}
+		} else {
+			Clear-Host
+			Write-Host "You can close this window by pressing Enter." -ForegroundColor Yellow -NoNewLine
+			EnterToContinue -DefaultPrompt $true
+			Stop-Transcript
+			exit
+		}
+	}
+
+	Write-Host "Loading..." -ForegroundColor Yellow
+	$scriptPath = $MyInvocation.MyCommand.Path
+	if ($scriptPath -match "$env:LocalAppData\Temp") {
+		if (-Not (Test-Path $log_dir)) {
+			New-Item -Path $log_dir -ItemType Directory -Force
+		}
+		$newScriptPath = Join-Path $log_dir (Split-Path -Leaf $scriptPath)
+		Write-Host "Moving the script at this path : $newScriptPath" -ForegroundColor Yellow
+		Write-Host "Launching the script..." -ForegroundColor Yellow
+		Copy-Item -Path $scriptPath -Destination $newScriptPath -Force
+		$scriptPath = $newScriptPath
+	}
+
+	Start-Process $powershellPath -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`" -FromLauncher"
+	exit
+}
+
 $localizations = @"
 {
 	"languages_default_regions": {
@@ -648,176 +818,6 @@ function GetTranslation {
 	}
 	# No translations found for this string ID
 	return $string_id
-}
-
-function EnterToContinue {
-	param (
-		[bool] $DefaultPrompt = $false
-	)
-	if ($DefaultPrompt) {
-		Write-Host (GetTranslation "enter-to-continue") -NoNewLine
-	}
-	$Host.UI.ReadLine()
-}
-
-function SetTitle {
-	param (
-		[string] $Name
-	)
-	$Host.UI.RawUI.WindowTitle = "$AppName v$Version - $Name"
-}
-
-function StopSpotify {
-	$spotify = Get-Process -Name spotify -ErrorAction SilentlyContinue
-	if ($spotify) {
-		Stop-Process $spotify
-	}
-}
-
-function RemoveIfExists {
-	param (
-		[string] $Path
-	)
-	if (Test-Path -Path $Path) {
-		Remove-Item $Path -Recurse
-	}
-}
-
-function Download {
-	param (
-		[string] $URL,
-		[string] $Path,
-		[bool] $Clear = $true
-	)
-	$webClient = New-Object System.Net.WebClient
-	$bufferSize = 8192  # 8KB
-	$startTime = Get-Date
-	$totalBytesReceived = 0
-	$responseStream = $webClient.OpenRead($URL)
-	$fileStream = [System.IO.File]::Create($Path)
-	$buffer = New-Object byte[] $bufferSize
-	$totalBytes = $webClient.ResponseHeaders["Content-Length"]
-	$bytesReceived = 0
-
-	while (($readBytes = $responseStream.Read($buffer, 0, $bufferSize)) -gt 0) {
-		$fileStream.Write($buffer, 0, $readBytes)
-		$totalBytesReceived += $readBytes
-		$timeElapsed = (Get-Date) - $startTime
-		$speed = $totalBytesReceived / $timeElapsed.TotalSeconds / 1MB
-		$percentComplete = ($totalBytesReceived / $totalBytes) * 100
-		if ($Clear) {
-			Clear-Host
-		}
-		Write-Progress -Activity (GetTranslation "downloading") -Status "$([math]::Round($percentComplete, 2))% $(GetTranslation "percentage-done")" -PercentComplete $percentComplete
-	}
-
-	$responseStream.Close()
-	$fileStream.Close()
-}
-
-# Titre fenêtre
-SetTitle (GetTranslation "loading")
-
-# Change de répertoire
-if ($PSScriptRoot) {
-	Set-Location $PSScriptRoot
-}
-
-# Génére un nom de fichier de log unique basé sur la date et l'heure
-$date = Get-Date -Format "yyyyMMdd_HHmmss"
-$log_dir = "$(Get-Location)\SpotiX-Logs"
-$log_file_name = "logs_$date.txt"
-$log_file_dir = "$log_dir\$log_file_name"
-
-# Crée le répertoire nécessaire pour les logs
-if (-not (Test-Path -Path $log_dir)) {
-	New-Item -Path $log_dir -ItemType Directory
-}
-
-# Commencement des logs
-Start-Transcript -Path $log_file_dir
-
-# Vérifie si PowerShell 7 est installé
-# PowerShell 7 pas installé => demande à l'utilisateur de l'installer
-# PowerShell 7 est installé => exécute le script avec PowerShell 7
-function GetPowershellPath {
-	$powershellRetailPath  = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
-	$powershellPreviewPath = "$env:ProgramFiles\PowerShell\7-preview\pwsh.exe"
-
-	if (Test-Path $powershellRetailPath) {
-		return $powershellRetailPath
-	}
-	if (Test-Path $powershellPreviewPath) {
-		return $powershellPreviewPath
-	}
-	return $null
-}
-
-if (($args -notcontains "-FromLauncher") -and ($PSVersionTable.PSVersion.Major -lt 7)) {
-	$powershellPath = GetPowershellPath
-
-	if (-not $powershellPath) {
-		SetTitle (GetTranslation "error")
-		Clear-Host
-		Write-Host (GetTranslation "powershell-7-not-installed") -ForegroundColor Red
-		$confirmation = Read-Host -Prompt ""
-
-		if ($confirmation -eq "Y") {
-			# Installation de PowerShell 7
-			$response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" | ConvertFrom-Json
-			$powershellLatestVersion = $response.tag_name.Substring(1)
-
-			SetTitle "PowerShell $powershellLatestVersion"
-			Clear-Host
-			Write-Host (GetTranslation "powershell-7-download-starting").Replace("`$powershellLatestVersion", $powershellLatestVersion) -ForegroundColor Green
-			$url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
-			$fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
-
-			$webClient = New-Object System.Net.WebClient
-			$webClient.DownloadFile($url, $fichierLocal)
-
-			if (Test-Path $fichierLocal) {
-				Write-Host (GetTranslation "powershell-7-download-finished") -ForegroundColor Green
-				Start-Process $fichierLocal
-				Write-Host (GetTranslation "powershell-7-installation-prompt") -ForegroundColor Green
-				EnterToContinue
-				$powershellPath = GetPowershellPath
-				if (-not $powershellPath) {
-					Write-Host (GetTranslation "powershell-7-error-installing") -ForegroundColor Red
-					EnterToContinue -DefaultPrompt $true
-					Stop-Transcript
-					exit
-				}
-			} else {
-				Write-Host (GetTranslation "powershell-7-error-downloading") -ForegroundColor Red
-				EnterToContinue -DefaultPrompt $true
-				Stop-Transcript
-				exit
-			}
-		} else {
-			Clear-Host
-			Write-Host (GetTranslation "close-window-prompt") -ForegroundColor Yellow -NoNewLine
-			EnterToContinue -DefaultPrompt $true
-			Stop-Transcript
-			exit
-		}
-	}
-
-	Write-Host "$(GetTranslation "loading")..." -ForegroundColor Yellow
-	$scriptPath = $MyInvocation.MyCommand.Path
-	if ($scriptPath -match "$env:LocalAppData\Temp") {
-		if (-Not (Test-Path $log_dir)) {
-			New-Item -Path $log_dir -ItemType Directory -Force
-		}
-		$newScriptPath = Join-Path $log_dir (Split-Path -Leaf $scriptPath)
-		Write-Host (GetTranslation "script-move").Replace("`$newScriptPath", $newScriptPath) -ForegroundColor Yellow
-		Write-Host (GetTranslation "script-launch") -ForegroundColor Yellow
-		Copy-Item -Path $scriptPath -Destination $newScriptPath -Force
-		$scriptPath = $newScriptPath
-	}
-
-	Start-Process $powershellPath -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`" -FromLauncher"
-	exit
 }
 
 # Verification admin ou pas
