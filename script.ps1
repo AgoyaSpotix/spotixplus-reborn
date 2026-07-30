@@ -957,7 +957,12 @@ function Install {
 		if ($confirmation1 -eq "Y") {
 			# Lancement de la désinstallation
 			Write-Host (GetTranslation "spotify-check-uninstalling")
+			if (Test-Path "$env:AppData\Spotify\uninstall.exe") {
 			Start-Process -FilePath "$env:AppData\Spotify\uninstall.exe" -NoNewWindow -Wait
+			}
+			else {
+				Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
+			}
 			if (Test-Path "$env:AppData\Spotify\Spotify.exe") {
 				Write-Host (GetTranslation "spotify-check-uninstalling-failed") -ForegroundColor Red
 				EnterToContinue
@@ -1243,8 +1248,6 @@ function Uninstall {
 
 		# Suppression des dossiers/fichiers
 		Write-Host (GetTranslation "spotify-uninstall")
-		#Start-Process -FilePath "$env:AppData\Spotify\Spotify.exe" -ArgumentList "/uninstall" -NoNewWindow -Wait
-		#Start-Process -FilePath "$env:AppData\Spotify\uninstall.exe" -NoNewWindow -Wait
 		if (Test-Path "$env:AppData\Spotify\uninstall.exe") {
 			Start-Process -FilePath "$env:AppData\Spotify\uninstall.exe" -NoNewWindow -Wait
 		}
