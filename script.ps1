@@ -26,12 +26,13 @@ $Logo = "
 
        ---------------------------------------------
       /               Made with <3                 /
-     /                    v$Version                    /
+     /                    v$Version               /
     ----------------------------------------------
 "
 
 # Paramètres PowerShell
 $ErrorActionPreference = "Continue"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 function EnterToContinue {
 	param (
