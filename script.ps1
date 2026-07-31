@@ -1,7 +1,7 @@
 ﻿# Constantes
 $AppNameShort = "SpotiX+"
 $AppName = "$AppNameShort PC Script"
-$Version = "2.1-rc1"
+$Version = "2.1-rc2"
 $ByPassAdmin = $false
 $NoTranslations = $false
 
