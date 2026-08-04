@@ -1,7 +1,7 @@
 # Constantes
 $AppNameShort = "SpotiX+"
 $AppName = "$AppNameShort PC Script"
-$Version = "2.1-rc3"
+$Version = "2.1-rc4"
 $ByPassAdmin = $false
 $NoTranslations = $false
 
@@ -153,87 +153,121 @@ function GetPowershellPath {
 }
 
 if ($args -notcontains "-FromLauncher") {
-    
-    # Get the PowerShell path correctly whether we are already in PS7 or not
+
+    # Si le script tourne déjà sous PowerShell 7, on continue dans la fenêtre
+    # actuelle. C'est indispensable pour le mode : irm <URL> | iex, car ce
+    # mode n'a aucun chemin de fichier dans $PSCommandPath.
     if ($PSVersionTable.PSVersion.Major -ge 7) {
-        $powershellPath = (Get-Process -Id $PID).Path
-    } else {
-        $powershellPath = GetPowershellPath
+        Write-Host "Loading SpotiX+..." -ForegroundColor Yellow
     }
+    else {
+        $powershellPath = GetPowershellPath
 
-    if (-not $powershellPath) {
-        SetTitle "Error"
-        Clear-Host
-        Write-Host "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ?" -ForegroundColor Red
-        $confirmation = Read-Host -Prompt "(Y/N) "
-
-        if ($confirmation -eq "Y") {
+        if (-not $powershellPath) {
+            SetTitle "Error"
             Clear-Host
-        
-            if (Get-Command winget -ErrorAction SilentlyContinue) {
-                Write-Host "Download and installation of PowerShell 7 via Winget..." -ForegroundColor Green
-                Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
-                $wingetArgs = "install --id Microsoft.PowerShell --exact --silent --accept-package-agreements --accept-source-agreements"
-                Start-Process -FilePath "winget" -ArgumentList $wingetArgs -Wait -NoNewWindow
-            } else {
-                Write-Host "Winget not found. This is normal if you're running Windows 8.1 ou Windows 10 LTSC." -ForegroundColor Yellow
-                Write-Host "Falling back to GitHub API..." -ForegroundColor Yellow
-                $response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" -UseBasicParsing | ConvertFrom-Json
-                $powershellLatestVersion = $response.tag_name.Substring(1)
+            Write-Host "PowerShell 7 is not installed on this system. It is required to use $AppNameShort.`nWould you like to install it ?" -ForegroundColor Red
+            $confirmation = Read-Host -Prompt "(Y/N) "
 
-                SetTitle "PowerShell $powershellLatestVersion"
+            if ($confirmation -eq "Y") {
                 Clear-Host
-                Write-Host "Download starting for PowerShell $powershellLatestVersion..." -ForegroundColor Green
-                Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
-                $url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
-                $fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
 
-				Download -URL $url -Path $fichierLocal -Clear $false
+                if (Get-Command winget -ErrorAction SilentlyContinue) {
+                    Write-Host "Download and installation of PowerShell 7 via Winget..." -ForegroundColor Green
+                    Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
+                    $wingetArgs = "install --id Microsoft.PowerShell --exact --silent --accept-package-agreements --accept-source-agreements"
+                    Start-Process -FilePath "winget" -ArgumentList $wingetArgs -Wait -NoNewWindow
+                }
+                else {
+                    Write-Host "Winget not found. This is normal if you're running Windows 8.1 or Windows 10 LTSC." -ForegroundColor Yellow
+                    Write-Host "Falling back to GitHub API..." -ForegroundColor Yellow
+                    $response = Invoke-WebRequest "https://api.github.com/repos/PowerShell/PowerShell/releases/latest" -UseBasicParsing | ConvertFrom-Json
+                    $powershellLatestVersion = $response.tag_name.Substring(1)
 
-                if (Test-Path $fichierLocal) {
-                    Write-Host "Download finished, installing..." -ForegroundColor Green
-                    Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$fichierLocal`" /quiet" -Verb RunAs -Wait
-                } else {
-                    Write-Host "An error occured during the downloading." -ForegroundColor Red
+                    SetTitle "PowerShell $powershellLatestVersion"
+                    Clear-Host
+                    Write-Host "Download starting for PowerShell $powershellLatestVersion..." -ForegroundColor Green
+                    Write-Host "Note : You might need to accept an UAC prompt." -ForegroundColor Yellow
+                    $url = "https://github.com/PowerShell/PowerShell/releases/download/v$powershellLatestVersion/PowerShell-$powershellLatestVersion-win-x64.msi"
+                    $fichierLocal = "$env:TEMP\PowerShell-$powershellLatestVersion-win-x64.msi"
+
+                    Download -URL $url -Path $fichierLocal -Clear $false
+
+                    if (Test-Path $fichierLocal) {
+                        Write-Host "Download finished, installing..." -ForegroundColor Green
+                        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$fichierLocal`" /quiet" -Verb RunAs -Wait
+                    }
+                    else {
+                        Write-Host "An error occurred during the download." -ForegroundColor Red
+                        EnterToContinue -DefaultPrompt $true
+                        Stop-Transcript -ErrorAction SilentlyContinue
+                        exit
+                    }
+                }
+
+                $powershellPath = GetPowershellPath
+                if (-not $powershellPath) {
+                    Write-Host "An error occurred during the installation." -ForegroundColor Red
                     EnterToContinue -DefaultPrompt $true
-                    Stop-Transcript
+                    Stop-Transcript -ErrorAction SilentlyContinue
                     exit
                 }
             }
-
-            # Vérification post-installation
-            $powershellPath = GetPowershellPath
-            if (-not $powershellPath) {
-                Write-Host "An error occured during the installation." -ForegroundColor Red
+            else {
+                Clear-Host
+                Write-Host "You can close this window by pressing Enter." -ForegroundColor Yellow
                 EnterToContinue -DefaultPrompt $true
-                Stop-Transcript
+                Stop-Transcript -ErrorAction SilentlyContinue
                 exit
             }
-        } else {
-            Clear-Host
-            Write-Host "You can close this window by pressing Enter." -ForegroundColor Yellow -NoNewLine
+        }
+
+        Write-Host "Loading SpotiX+..." -ForegroundColor Yellow
+
+        # Sous Windows PowerShell 5, irm | iex n'a pas de fichier local.
+        # On télécharge donc une copie temporaire avant de lancer PowerShell 7.
+        $scriptPath = $PSCommandPath
+        if ([string]::IsNullOrWhiteSpace($scriptPath)) {
+            $scriptPath = Join-Path $env:TEMP "SpotiXPlus-$Version.ps1"
+
+            try {
+                Invoke-WebRequest `
+                    -Uri "https://github.com/$GithubUser/$GithubRepo/releases/download/nightly/script.ps1" `
+                    -OutFile $scriptPath `
+                    -UseBasicParsing `
+                    -ErrorAction Stop
+            }
+            catch {
+                Write-Host "Unable to download the temporary SpotiX+ script." -ForegroundColor Red
+                Write-Host $_.Exception.Message -ForegroundColor Red
+                EnterToContinue -DefaultPrompt $true
+                Stop-Transcript -ErrorAction SilentlyContinue
+                exit
+            }
+        }
+
+        if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) {
+            Write-Host "The SpotiX+ script file could not be found: $scriptPath" -ForegroundColor Red
             EnterToContinue -DefaultPrompt $true
-            Stop-Transcript
+            Stop-Transcript -ErrorAction SilentlyContinue
             exit
         }
-    }
 
-    Write-Host "Loading SpotiX+..." -ForegroundColor Yellow
-    $scriptPath = $MyInvocation.MyCommand.Path
-    if ($scriptPath -like "*$env:LocalAppData\Temp*") {
-        if (-Not (Test-Path $log_dir)) {
-            New-Item -Path $log_dir -ItemType Directory -Force
+        Stop-Transcript -ErrorAction SilentlyContinue
+
+        $process = Start-Process `
+            -FilePath $powershellPath `
+            -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -FromLauncher" `
+            -PassThru `
+            -ErrorAction SilentlyContinue
+
+        if (-not $process) {
+            Write-Host "PowerShell 7 could not be started." -ForegroundColor Red
+            EnterToContinue -DefaultPrompt $true
         }
-        $newScriptPath = Join-Path $log_dir (Split-Path -Leaf $scriptPath)
-        Write-Host "Moving the script at this path : $newScriptPath" -ForegroundColor Yellow
-        Write-Host "Launching the script..." -ForegroundColor Yellow
-        Copy-Item -Path $scriptPath -Destination $newScriptPath -Force
-        $scriptPath = $newScriptPath
-    }
 
-    # Exit the boostrapper and lauch the script with PowerShell 7
-    Start-Process $powershellPath -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`" -FromLauncher"
-    exit
+        exit
+    }
 }
 
 
@@ -608,7 +642,7 @@ $localizations = @"
 			"fr-FR": "Suppresion de Spicetify...",
 			"en-US": "Deleting Spicetify..."
 		},
-		'spotiflac-uninstalling': {
+		"spotiflac-uninstalling": {
 			"fr-FR": "Suppresion de SpotiFLAC...",
 			"en-US": "Deleting SpotiFLAC..."
 		},
