@@ -107,19 +107,23 @@ if ($PSScriptRoot) {
 	Set-Location $PSScriptRoot
 }
 
-# Génére un nom de fichier de log unique basé sur la date et l'heure
+# Génère un nom de fichier de log unique basé sur la date et l'heure
 $date = Get-Date -Format "yyyyMMdd_HHmmss"
-$log_dir = "$(Get-Location)\SpotiX-Logs"
-$log_file_name = "logs_$date.txt"
-$log_file_dir = "$log_dir\$log_file_name"
 
-# Crée le répertoire nécessaire pour les logs
-if (-not (Test-Path -Path $log_dir)) {
-	New-Item -Path $log_dir -ItemType Directory
+# Ne pas utiliser Get-Location ici : avec irm | iex, PowerShell peut démarrer
+# dans C:\Windows\System32, où un utilisateur standard ne peut pas écrire.
+$log_base_dir = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { $env:TEMP }
+$log_dir = Join-Path $log_base_dir "SpotiX-Logs"
+$log_file_name = "logs_$date.txt"
+$log_file_dir = Join-Path $log_dir $log_file_name
+
+# Crée le répertoire nécessaire pour les logs dans un emplacement utilisateur.
+if (-not (Test-Path -LiteralPath $log_dir)) {
+	New-Item -Path $log_dir -ItemType Directory -Force | Out-Null
 }
 
 # Commencement des logs
-Start-Transcript -Path $log_file_dir
+Start-Transcript -Path $log_file_dir -Force
 
 # Vérifie si PowerShell 7 est installé
 # PowerShell 7 pas installé => demande à l'utilisateur de l'installer
