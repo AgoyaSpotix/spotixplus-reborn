@@ -1,13 +1,17 @@
 # Constantes
 $AppNameShort = "SpotiX+"
 $AppName = "$AppNameShort PC Script"
-$Version = "2.1-rc4"
+$Version = "2.1-rc5"
 $ByPassAdmin = $false
 $NoTranslations = $false
 
 $GithubUser = "AgoyaSpotix"
 $GithubRepo = "spotixplus-reborn"
 $Discord = "https://discord.gg/p3AAf7TUPv"
+$DiscordApplicationId = "1534250854087921725"
+$DiscordLargeImageKey = "spotixplus"
+$SpotiXWebsite = "https://spotixplus.fr"
+$SpotiXGithub = "https://github.com/$GithubUser/$GithubRepo"
 
 $WshShell = $null
 $Shortcut = $null
@@ -395,30 +399,34 @@ $localizations = @"
 			"en-US": "Create shortcut on your desktop"
 		},
 		"lobby-menu6": {
+			"fr-FR": "Configurer la Rich Presence Discord",
+			"en-US": "Configure Discord Rich Presence"
+		},
+		"lobby-menu7": {
 			"fr-FR": "Désinstaller $AppNameShort",
 			"en-US": "Uninstall $AppNameShort"
 		},
-		"lobby-menu7": {
+		"lobby-menu8": {
 			"fr-FR": "Ouvrir la page GitHub",
 			"en-US": "Open GitHub Webpage"
 		},
-		"lobby-menu8": {
+		"lobby-menu9": {
 			"fr-FR": "Rejoindre notre serveur Discord",
 			"en-US": "Join our Discord server"
 		},
-		"lobby-menu9": {
+		"lobby-menu10": {
 			"fr-FR": "Fermer le script",
 			"en-US": "Close the script"
 		},
-		"lobby-menu7-openning-github": {
+		"lobby-menu8-openning-github": {
 			"fr-FR": "Ouverture de la page GitHub...",
 			"en-US": "Openning the GitHub Webpage..."
 		},
-		"lobby-menu8-openning-discord": {
+		"lobby-menu9-openning-discord": {
 			"fr-FR": "Ouverture du lien d'invitation Discord...",
 			"en-US": "Openning the Discord join link..."
 		},
-		"lobby-menu9-goodbye": {
+		"lobby-menu10-goodbye": {
 			"fr-FR": "A bientôt !",
 			"en-US": "See you soon !"
 		},
@@ -865,6 +873,38 @@ $localizations = @"
 		"spotiflac-install-error": {
 		"fr-FR": "Une erreur est survenue lors de l’installation de SpotiFLAC.",
 		"en-US": "An error occurred while installing SpotiFLAC."
+		},
+		"discord-rpc-title": {
+			"fr-FR": "Rich Presence Discord",
+			"en-US": "Discord Rich Presence"
+		},
+		"discord-rpc-confirm": {
+			"fr-FR": "Souhaitez-vous activer la Rich Presence Discord de SpotiX+ ?",
+			"en-US": "Would you like to enable SpotiX+ Discord Rich Presence?"
+		},
+		"discord-rpc-enable": {
+			"fr-FR": "Activer la Rich Presence",
+			"en-US": "Enable Rich Presence"
+		},
+		"discord-rpc-disable": {
+			"fr-FR": "Ne pas l'activer",
+			"en-US": "Do not enable it"
+		},
+		"discord-rpc-installing": {
+			"fr-FR": "Installation de la Rich Presence Discord...",
+			"en-US": "Installing Discord Rich Presence..."
+		},
+		"discord-rpc-installed": {
+			"fr-FR": "La Rich Presence Discord a été activée avec succès !",
+			"en-US": "Discord Rich Presence has been enabled successfully!"
+		},
+		"discord-rpc-disabled": {
+			"fr-FR": "La Rich Presence Discord est désactivée.",
+			"en-US": "Discord Rich Presence is disabled."
+		},
+		"discord-rpc-error": {
+			"fr-FR": "Une erreur est survenue pendant l'installation de la Rich Presence Discord.",
+			"en-US": "An error occurred while installing Discord Rich Presence."
 		}
 	}
 }
@@ -935,6 +975,455 @@ function GetUserChoices {
 	return $responses
 }
 
+
+function StopDiscordRichPresence {
+    $PresenceFolder = Join-Path $env:LOCALAPPDATA "SpotiXPresence"
+    $PidFile = Join-Path $PresenceFolder "SpotiXPresence.pid"
+
+    if (-not (Test-Path -LiteralPath $PidFile -PathType Leaf)) {
+        return
+    }
+
+    try {
+        $PresencePid = [int](Get-Content -LiteralPath $PidFile -Raw -ErrorAction Stop).Trim()
+        $PresenceProcess = Get-CimInstance Win32_Process -Filter "ProcessId = $PresencePid" -ErrorAction SilentlyContinue
+
+        if ($PresenceProcess -and $PresenceProcess.CommandLine -like "*SpotiXPresence.ps1*") {
+            Stop-Process -Id $PresencePid -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 300
+        }
+    }
+    catch {
+        # Le processus n'existe probablement plus
+    }
+
+    Remove-Item -LiteralPath $PidFile -Force -ErrorAction SilentlyContinue
+}
+
+function RemoveDiscordRichPresence {
+    StopDiscordRichPresence
+
+    $PresenceFolder = Join-Path $env:LOCALAPPDATA "SpotiXPresence"
+    $StartupFolder = [Environment]::GetFolderPath("Startup")
+    $StartupShortcut = Join-Path $StartupFolder "SpotiXPresence.lnk"
+
+    Remove-Item -LiteralPath $StartupShortcut -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $PresenceFolder -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+function InstallDiscordRichPresence {
+    SetTitle (GetTranslation "discord-rpc-title")
+    PrintLogo
+
+    $RichPresenceChoice = Read-Host -Prompt ((
+        (GetTranslation "discord-rpc-confirm"),
+        "1. $(GetTranslation "discord-rpc-enable")",
+        "2. $(GetTranslation "discord-rpc-disable")"
+    ) -join "`n")
+
+    if ($RichPresenceChoice -ne "1") {
+        RemoveDiscordRichPresence
+        Write-Host (GetTranslation "discord-rpc-disabled") -ForegroundColor Yellow
+        EnterToContinue -DefaultPrompt $true
+        return
+    }
+
+    Write-Host (GetTranslation "discord-rpc-installing") -ForegroundColor Yellow
+
+    $PresenceFolder = Join-Path $env:LOCALAPPDATA "SpotiXPresence"
+    $PresenceScript = Join-Path $PresenceFolder "SpotiXPresence.ps1"
+    $StartupFolder = [Environment]::GetFolderPath("Startup")
+    $StartupShortcut = Join-Path $StartupFolder "SpotiXPresence.lnk"
+    $WindowsPowerShell = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\powershell.exe"
+
+    try {
+        StopDiscordRichPresence
+        New-Item -ItemType Directory -Path $PresenceFolder -Force | Out-Null
+
+        $PresenceSource = @'
+$ErrorActionPreference = "SilentlyContinue"
+
+$ClientId = "__CLIENT_ID__"
+$LargeImageKey = "__LARGE_IMAGE_KEY__"
+$SpotiXVersion = "__VERSION__"
+$WebsiteUrl = "__WEBSITE_URL__"
+$GithubUrl = "__GITHUB_URL__"
+$PresenceName = "SpotiX+ Reborn"
+$PresenceDetails = "Custom Spotify"
+
+$PresenceFolder = Split-Path -Parent $MyInvocation.MyCommand.Path
+$PidFile = Join-Path $PresenceFolder "SpotiXPresence.pid"
+$LogFile = Join-Path $PresenceFolder "SpotiXPresence.log"
+
+function Write-PresenceLog {
+    param([string] $Message)
+
+    try {
+        if ((Test-Path -LiteralPath $LogFile) -and ((Get-Item -LiteralPath $LogFile).Length -gt 262144)) {
+            Remove-Item -LiteralPath $LogFile -Force -ErrorAction SilentlyContinue
+        }
+        Add-Content -LiteralPath $LogFile -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - $Message" -Encoding UTF8
+    }
+    catch {
+    }
+}
+
+$CreatedNew = $false
+$PresenceMutex = [System.Threading.Mutex]::new($true, "Local\SpotiXPresence", [ref]$CreatedNew)
+if (-not $CreatedNew) {
+    exit
+}
+
+try {
+    Set-Content -LiteralPath $PidFile -Value $PID -Encoding ASCII -Force
+}
+catch {
+}
+
+try {
+    Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class SpotiXPipeNative
+{
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool PeekNamedPipe(
+        IntPtr hNamedPipe,
+        IntPtr lpBuffer,
+        uint nBufferSize,
+        IntPtr lpBytesRead,
+        out uint lpTotalBytesAvail,
+        IntPtr lpBytesLeftThisMessage
+    );
+}
+"@
+}
+catch {
+}
+
+function Write-RpcFrame {
+    param(
+        [System.IO.Pipes.NamedPipeClientStream] $Pipe,
+        [int] $Opcode,
+        [byte[]] $PayloadBytes
+    )
+
+    $Header = New-Object byte[] 8
+    [Array]::Copy([BitConverter]::GetBytes([int]$Opcode), 0, $Header, 0, 4)
+    [Array]::Copy([BitConverter]::GetBytes([int]$PayloadBytes.Length), 0, $Header, 4, 4)
+
+    $Pipe.Write($Header, 0, $Header.Length)
+    if ($PayloadBytes.Length -gt 0) {
+        $Pipe.Write($PayloadBytes, 0, $PayloadBytes.Length)
+    }
+    $Pipe.Flush()
+}
+
+function Write-RpcJson {
+    param(
+        [System.IO.Pipes.NamedPipeClientStream] $Pipe,
+        [int] $Opcode,
+        [object] $Payload
+    )
+
+    $Json = $Payload | ConvertTo-Json -Depth 12 -Compress
+    $PayloadBytes = [System.Text.Encoding]::UTF8.GetBytes($Json)
+    Write-RpcFrame -Pipe $Pipe -Opcode $Opcode -PayloadBytes $PayloadBytes
+}
+
+function Read-ExactBytes {
+    param(
+        [System.IO.Pipes.NamedPipeClientStream] $Pipe,
+        [int] $Count,
+        [int] $TimeoutMilliseconds = 3000
+    )
+
+    $Buffer = New-Object byte[] $Count
+    $Offset = 0
+
+    while ($Offset -lt $Count) {
+        $AsyncResult = $Pipe.BeginRead($Buffer, $Offset, $Count - $Offset, $null, $null)
+        try {
+            if (-not $AsyncResult.AsyncWaitHandle.WaitOne($TimeoutMilliseconds)) {
+                throw "Discord RPC read timeout."
+            }
+            $Read = $Pipe.EndRead($AsyncResult)
+        }
+        finally {
+            $AsyncResult.AsyncWaitHandle.Close()
+        }
+
+        if ($Read -le 0) {
+            throw "Discord RPC connection closed."
+        }
+        $Offset += $Read
+    }
+
+    return ,$Buffer
+}
+
+function Read-RpcFrame {
+    param([System.IO.Pipes.NamedPipeClientStream] $Pipe)
+
+    $Header = Read-ExactBytes -Pipe $Pipe -Count 8
+    $Opcode = [BitConverter]::ToInt32($Header, 0)
+    $PayloadLength = [BitConverter]::ToInt32($Header, 4)
+
+    if ($PayloadLength -lt 0 -or $PayloadLength -gt 1048576) {
+        throw "Invalid Discord RPC payload length."
+    }
+
+    $PayloadBytes = if ($PayloadLength -gt 0) {
+        Read-ExactBytes -Pipe $Pipe -Count $PayloadLength
+    }
+    else {
+        New-Object byte[] 0
+    }
+
+    [PSCustomObject]@{
+        Opcode = $Opcode
+        PayloadBytes = $PayloadBytes
+        PayloadText = [System.Text.Encoding]::UTF8.GetString($PayloadBytes)
+    }
+}
+
+function Get-PipeAvailableBytes {
+    param([System.IO.Pipes.NamedPipeClientStream] $Pipe)
+
+    [uint32]$Available = 0
+    $Handle = $Pipe.SafePipeHandle.DangerousGetHandle()
+    $Success = [SpotiXPipeNative]::PeekNamedPipe(
+        $Handle,
+        [IntPtr]::Zero,
+        0,
+        [IntPtr]::Zero,
+        [ref]$Available,
+        [IntPtr]::Zero
+    )
+
+    if (-not $Success) {
+        throw "Unable to inspect Discord RPC pipe."
+    }
+
+    return [int]$Available
+}
+
+function Connect-DiscordRpc {
+    foreach ($Index in 0..9) {
+        $Pipe = $null
+        try {
+            $Pipe = [System.IO.Pipes.NamedPipeClientStream]::new(
+                ".",
+                "discord-ipc-$Index",
+                [System.IO.Pipes.PipeDirection]::InOut,
+                [System.IO.Pipes.PipeOptions]::Asynchronous
+            )
+            $Pipe.Connect(300)
+
+            Write-RpcJson -Pipe $Pipe -Opcode 0 -Payload ([ordered]@{
+                v = 1
+                client_id = $ClientId
+            })
+
+            $ReadyFrame = Read-RpcFrame -Pipe $Pipe
+            if ($ReadyFrame.Opcode -eq 1) {
+                Write-PresenceLog "Connected to Discord IPC $Index."
+                return $Pipe
+            }
+        }
+        catch {
+            if ($Pipe) {
+                $Pipe.Dispose()
+            }
+        }
+    }
+
+    return $null
+}
+
+function Set-SpotiXActivity {
+    param(
+        [System.IO.Pipes.NamedPipeClientStream] $Pipe,
+        [long] $StartedAt
+    )
+
+    $Activity = [ordered]@{
+        type = 2
+        details = $PresenceDetails
+        state = "Version $SpotiXVersion"
+        timestamps = [ordered]@{
+            start = $StartedAt
+        }
+        assets = [ordered]@{
+            large_image = $LargeImageKey
+            large_text = $PresenceName
+        }
+        buttons = @(
+            [ordered]@{
+                label = "Site officiel"
+                url = $WebsiteUrl
+            },
+            [ordered]@{
+                label = "GitHub"
+                url = $GithubUrl
+            }
+        )
+        instance = $false
+    }
+
+    Write-RpcJson -Pipe $Pipe -Opcode 1 -Payload ([ordered]@{
+        cmd = "SET_ACTIVITY"
+        args = [ordered]@{
+            pid = $PID
+            activity = $Activity
+        }
+        nonce = [Guid]::NewGuid().ToString()
+    })
+}
+
+function Clear-SpotiXActivity {
+    param([System.IO.Pipes.NamedPipeClientStream] $Pipe)
+
+    Write-RpcJson -Pipe $Pipe -Opcode 1 -Payload ([ordered]@{
+        cmd = "SET_ACTIVITY"
+        args = [ordered]@{
+            pid = $PID
+            activity = $null
+        }
+        nonce = [Guid]::NewGuid().ToString()
+    })
+}
+
+$DiscordPipe = $null
+$SpotifyWasRunning = $false
+$StartedAt = 0
+
+Write-PresenceLog "SpotiXPresence started."
+
+try {
+    while ($true) {
+        $SpotifyRunning = $null -ne (Get-Process -Name "Spotify" -ErrorAction SilentlyContinue | Select-Object -First 1)
+
+        if ($SpotifyRunning) {
+            if (-not $SpotifyWasRunning) {
+                $StartedAt = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                Write-PresenceLog "Spotify detected."
+            }
+
+            if (($null -eq $DiscordPipe) -or (-not $DiscordPipe.IsConnected)) {
+                if ($DiscordPipe) {
+                    $DiscordPipe.Dispose()
+                }
+                $DiscordPipe = Connect-DiscordRpc
+
+                if ($DiscordPipe) {
+                    Set-SpotiXActivity -Pipe $DiscordPipe -StartedAt $StartedAt
+                    Write-PresenceLog "Rich Presence enabled."
+                }
+            }
+
+            if ($DiscordPipe) {
+                try {
+                    while ((Get-PipeAvailableBytes -Pipe $DiscordPipe) -gt 0) {
+                        $Frame = Read-RpcFrame -Pipe $DiscordPipe
+
+                        if ($Frame.Opcode -eq 3) {
+                            Write-RpcFrame -Pipe $DiscordPipe -Opcode 4 -PayloadBytes $Frame.PayloadBytes
+                        }
+                        elseif ($Frame.Opcode -eq 2) {
+                            throw "Discord closed the RPC connection."
+                        }
+                    }
+                }
+                catch {
+                    Write-PresenceLog "Discord RPC disconnected: $($_.Exception.Message)"
+                    $DiscordPipe.Dispose()
+                    $DiscordPipe = $null
+                }
+            }
+        }
+        else {
+            if ($SpotifyWasRunning) {
+                Write-PresenceLog "Spotify closed."
+            }
+
+            if ($DiscordPipe) {
+                try {
+                    Clear-SpotiXActivity -Pipe $DiscordPipe
+                    Start-Sleep -Milliseconds 100
+                }
+                catch {
+                }
+                $DiscordPipe.Dispose()
+                $DiscordPipe = $null
+            }
+
+            $StartedAt = 0
+        }
+
+        $SpotifyWasRunning = $SpotifyRunning
+        Start-Sleep -Seconds 3
+    }
+}
+finally {
+    if ($DiscordPipe) {
+        try {
+            Clear-SpotiXActivity -Pipe $DiscordPipe
+        }
+        catch {
+        }
+        $DiscordPipe.Dispose()
+    }
+
+    Remove-Item -LiteralPath $PidFile -Force -ErrorAction SilentlyContinue
+    if ($PresenceMutex) {
+        $PresenceMutex.ReleaseMutex()
+        $PresenceMutex.Dispose()
+    }
+}
+'@
+
+        $PresenceSource = $PresenceSource.Replace("__CLIENT_ID__", $DiscordApplicationId)
+        $PresenceSource = $PresenceSource.Replace("__LARGE_IMAGE_KEY__", $DiscordLargeImageKey)
+        $PresenceSource = $PresenceSource.Replace("__VERSION__", $Version)
+        $PresenceSource = $PresenceSource.Replace("__WEBSITE_URL__", $SpotiXWebsite)
+        $PresenceSource = $PresenceSource.Replace("__GITHUB_URL__", $SpotiXGithub)
+
+        # Le helper est un fichier local exécuté par Windows PowerShell 5.1 :
+        # le BOM UTF-8 est volontaire pour conserver correctement les accents.
+        $Utf8WithBom = [System.Text.UTF8Encoding]::new($true)
+        [System.IO.File]::WriteAllText($PresenceScript, $PresenceSource, $Utf8WithBom)
+
+        $WshShellPresence = New-Object -ComObject WScript.Shell
+        $PresenceShortcutObject = $WshShellPresence.CreateShortcut($StartupShortcut)
+        $PresenceShortcutObject.TargetPath = $WindowsPowerShell
+        $PresenceShortcutObject.Arguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$PresenceScript`""
+        $PresenceShortcutObject.WorkingDirectory = $PresenceFolder
+        $PresenceShortcutObject.Description = "SpotiX+ Reborn Discord Rich Presence"
+        $PresenceShortcutObject.WindowStyle = 7
+        $PresenceShortcutObject.Save()
+
+        [void][Runtime.InteropServices.Marshal]::ReleaseComObject($PresenceShortcutObject)
+        [void][Runtime.InteropServices.Marshal]::ReleaseComObject($WshShellPresence)
+
+        Start-Process `
+            -FilePath $WindowsPowerShell `
+            -ArgumentList "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$PresenceScript`"" `
+            -WindowStyle Hidden `
+            -ErrorAction Stop
+
+        Write-Host (GetTranslation "discord-rpc-installed") -ForegroundColor Green
+        EnterToContinue -DefaultPrompt $true
+    }
+    catch {
+        Write-Host (GetTranslation "discord-rpc-error") -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor DarkRed
+        RemoveDiscordRichPresence
+        EnterToContinue -DefaultPrompt $true
+    }
+}
+
 function InstallDev {
 	#dev
 	#Delof le farfadet malicieux
@@ -944,7 +1433,7 @@ function InstallDev {
 	Write-Host "Donc DÉGAGEZ !!!"
 	Write-Host "Ou restez, jsp, je m'en fous en fait"
 	Write-Host "Si vous souhaitez partir, appuyez sur la touche Entrée"
-	EnterToContinue
+	EnterToContinue -DefaultPrompt $true
 }
 
 # Désinstaller Spotify (UWP)
@@ -1168,6 +1657,9 @@ function Install {
 			#SpotiFLAC
 			SpotiFLAC
 
+			#Rich Presence Discord
+			InstallDiscordRichPresence
+
 			# Renommer le raccourci Spotify du bureau
 			#$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
 			#$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
@@ -1290,6 +1782,7 @@ function Uninstall {
 	if ($confirmation -eq "Y") {
 		SetTitle (GetTranslation "uninstalling")
 		StopSpotify
+		RemoveDiscordRichPresence
 		Write-Host (GetTranslation "uninstall-starting")
 
 		# Suppression des dossiers/fichiers
@@ -1803,13 +2296,14 @@ function Main {
 		"3. ⤵️ $(GetTranslation "lobby-menu3")",
 		"4. 🛒 $(GetTranslation "lobby-menu4")",
 		"5. 💻​ $(GetTranslation "lobby-menu5")",
-		"6. 🗑️ $(GetTranslation "lobby-menu6")",
-		"7. 🌐 $(GetTranslation "lobby-menu7")",
-		"8. 📨 $(GetTranslation "lobby-menu8")",
-		"9. 👋 $(GetTranslation "lobby-menu9")"
+		"6. 🎮 $(GetTranslation "lobby-menu6")",
+		"7. 🗑️ $(GetTranslation "lobby-menu7")",
+		"8. 🌐 $(GetTranslation "lobby-menu8")",
+		"9. 📨 $(GetTranslation "lobby-menu9")",
+		"10. 👋 $(GetTranslation "lobby-menu10")"
 	) -join "`n`t")
 
-	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8", "9")
+	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
 
 	# Exécute les commandes en fonction des réponses
 	switch ($userChoices0.Trim()) {
@@ -1834,30 +2328,31 @@ function Main {
 			Main
 		}
 		"6" {
-			Uninstall
+			InstallDiscordRichPresence
 			Main
 		}
 		"7" {
-			Write-Host (GetTranslation "lobby-menu7-openning-github")
-			Start-Process "https://github.com/$GithubUser/$GithubRepo"
+			Uninstall
 			Main
 		}
 		"8" {
-			Write-Host (GetTranslation "lobby-menu8-openning-discord")
-			Start-Process $Discord
+			Write-Host (GetTranslation "lobby-menu8-openning-github")
+			Start-Process "https://github.com/$GithubUser/$GithubRepo"
 			Main
 		}
 		"9" {
-			Write-Host (GetTranslation "lobby-menu9-goodbye")
+			Write-Host (GetTranslation "lobby-menu9-openning-discord")
+			Start-Process $Discord
+			Main
+		}
+		"10" {
+			Write-Host (GetTranslation "lobby-menu10-goodbye")
 			Start-Sleep -Seconds 1
 			Stop-Transcript
 			exit
 		}
-		"10" {
-			InstallDev
-			Main
-		}
 		"11" {
+			InstallDev
 			Main
 		}
 		"99" {
