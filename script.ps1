@@ -1,4 +1,4 @@
-# Constantes
+﻿# Constantes
 $AppNameShort = "SpotiX+"
 $AppName = "$AppNameShort PC Script"
 $Version = "2.1-rc5"
@@ -1017,8 +1017,8 @@ function InstallDiscordRichPresence {
 
     $RichPresenceChoice = Read-Host -Prompt ((
         (GetTranslation "discord-rpc-confirm"),
-        "1. $(GetTranslation "discord-rpc-enable")",
-        "2. $(GetTranslation "discord-rpc-disable")"
+		"1. $(GetTranslation 'discord-rpc-enable')",
+		"2. $(GetTranslation 'discord-rpc-disable')"
     ) -join "`n")
 
     if ($RichPresenceChoice -ne "1") {
@@ -1516,9 +1516,9 @@ function Install {
 	} else {
 			Write-Host ((
 				(GetTranslation "app-install-version-choice-prompt"),
-				"1. $(GetTranslation "app-install-version-choice-version1")",
-				"2. $(GetTranslation "app-install-version-choice-version2")",
-				"3. $(GetTranslation "app-install-version-choice-version3")"
+				"1. $(GetTranslation 'app-install-version-choice-version1')",
+				"2. $(GetTranslation 'app-install-version-choice-version2')",
+				"3. $(GetTranslation 'app-install-version-choice-version3')"
 			) -join "`n`t")
 			Write-Host (GetTranslation "app-install-version-choice-more-info")
 			$confirmation2 = GetUserChoices -validResponses @("1", "2", "3")
@@ -1618,9 +1618,9 @@ function Install {
 			Write-Host (GetTranslation "spicetify-plugins-prompt")
 			Write-Host ((
 				(GetTranslation "spicetify-plugins-prompt-2"),
-				"1. $(GetTranslation "spicetify-plugins-plugin-1")",
-				"2. $(GetTranslation "spicetify-plugins-plugin-2")",
-				"3. $(GetTranslation "spicetify-plugins-plugin-3")"
+				"1. $(GetTranslation 'spicetify-plugins-plugin-1')",
+				"2. $(GetTranslation 'spicetify-plugins-plugin-2')",
+				"3. $(GetTranslation 'spicetify-plugins-plugin-3')"
 			) -join "`n`t")
 			Write-Host (GetTranslation "spicetify-plugins-prompt-3")
 			$userChoices = GetUserChoices -validResponses @("1", "2", "3") -Multiple $true
@@ -1849,9 +1849,9 @@ function HighQuality {
 	Write-Host (GetTranslation "audio-warning") -ForegroundColor Red
 	Write-Host ((
 		(GetTranslation "audio-prompt"),
-		"1. $(GetTranslation "audio-high")",
-		"2. $(GetTranslation "audio-low")",
-		"3. $(GetTranslation "audio-no-changes")"
+		"1. $(GetTranslation 'audio-high')",
+		"2. $(GetTranslation 'audio-low')",
+		"3. $(GetTranslation 'audio-no-changes')"
 	) -join "`n`t")
 	$userChoices = GetUserChoices -validResponses @("1", "2", "3")
 	PrintLogo
@@ -1958,8 +1958,8 @@ function SpotiFLAC {
 	Write-Host ""
 	Write-Host ((
 		(GetTranslation "spotiflac-confirm"),
-		"1. $(GetTranslation "spotiflac-ok")",
-		"2. $(GetTranslation "return")"
+		"1. $(GetTranslation 'spotiflac-ok')",
+		"2. $(GetTranslation 'return')"
 	) -join "`n`t")
 	$userChoices = GetUserChoices -validResponses @("1", "2")
 	switch ($userChoices.Trim()) {
@@ -2137,9 +2137,9 @@ function SpicetifyH {
 	Write-Host (GetTranslation "spicetify-configh") 
 	Write-Host ((
 		(GetTranslation "spicetify-configh1"),
-		"1. $(GetTranslation "spicetify-install")",
-		"2. $(GetTranslation "spicetify-uninstall")",
-		"3. $(GetTranslation "return")"
+		"1. $(GetTranslation 'spicetify-install')",
+		"2. $(GetTranslation 'spicetify-uninstall')",
+		"3. $(GetTranslation 'return')"
 	) -join "`n`t")
 	$userChoices = GetUserChoices -validResponses @("1", "2", "3")
 	PrintLogo
@@ -2177,8 +2177,8 @@ function CreateShortcutOnDesktop {
 
 	Write-Host ((
 		(GetTranslation "create-shortcut-on-desktop"),
-		"1. $(GetTranslation "create-shortcut")",
-		"2. $(GetTranslation "return")"
+		"1. $(GetTranslation 'create-shortcut')",
+		"2. $(GetTranslation 'return')"
 	) -join "`n`t")
 	$userChoices = GetUserChoices -validResponses @("1", "2")
 	PrintLogo
@@ -2291,16 +2291,16 @@ function Main {
 
 	Write-Host ((
 		(GetTranslation "lobby-menu"),
-		"1. 💾 $(GetTranslation "lobby-menu1")",
-		"2. 🎶 $(GetTranslation "lobby-menu2")",
-		"3. ⤵️ $(GetTranslation "lobby-menu3")",
-		"4. 🛒 $(GetTranslation "lobby-menu4")",
-		"5. 💻​ $(GetTranslation "lobby-menu5")",
-		"6. 🎮 $(GetTranslation "lobby-menu6")",
-		"7. 🗑️ $(GetTranslation "lobby-menu7")",
-		"8. 🌐 $(GetTranslation "lobby-menu8")",
-		"9. 📨 $(GetTranslation "lobby-menu9")",
-		"10. 👋 $(GetTranslation "lobby-menu10")"
+		"1. 💾 $(GetTranslation 'lobby-menu1')",
+		"2. 🎶 $(GetTranslation 'lobby-menu2')",
+		"3. ⤵️ $(GetTranslation 'lobby-menu3')",
+		"4. 🛒 $(GetTranslation 'lobby-menu4')",
+		"5. 💻​ $(GetTranslation 'lobby-menu5')",
+		"6. 🎮 $(GetTranslation 'lobby-menu6')",
+		"7. 🗑️ $(GetTranslation 'lobby-menu7')",
+		"8. 🌐 $(GetTranslation 'lobby-menu8')",
+		"9. 📨 $(GetTranslation 'lobby-menu9')",
+		"10. 👋 $(GetTranslation 'lobby-menu10')"
 	) -join "`n`t")
 
 	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
