@@ -1,7 +1,7 @@
-﻿# Constantes
+# Constantes
 $AppNameShort = "SpotiX+"
 $AppName = "$AppNameShort PC Script"
-$Version = "2.1-rc5"
+$Version = "3.0 rc1"
 $ByPassAdmin = $false
 $NoTranslations = $false
 
@@ -905,6 +905,22 @@ $localizations = @"
 		"discord-rpc-error": {
 			"fr-FR": "Une erreur est survenue pendant l'installation de la Rich Presence Discord.",
 			"en-US": "An error occurred while installing Discord Rich Presence."
+		},
+		"companion-installing": {
+			"fr-FR": "Installation de SpotiX+ Companion...",
+			"en-US": "Installing SpotiX+ Companion..."
+		},
+		"companion-installed": {
+			"fr-FR": "SpotiX+ Companion a été installé avec succès !",
+			"en-US": "SpotiX+ Companion was installed successfully!"
+		},
+		"companion-error": {
+			"fr-FR": "Une erreur est survenue pendant l’installation de SpotiX+ Companion.",
+			"en-US": "An error occurred while installing SpotiX+ Companion."
+		},
+		"companion-spotify-not-found": {
+			"fr-FR": "Spotify doit être installé avant SpotiX+ Companion.",
+			"en-US": "Spotify must be installed before SpotiX+ Companion."
 		}
 	}
 }
@@ -1424,6 +1440,1868 @@ finally {
     }
 }
 
+function StopSpotiXCompanion {
+    $CurrentProcessId = $PID
+    $InstalledCompanionScript = Join-Path `
+        (Join-Path $env:LOCALAPPDATA "SpotiXPlus") `
+        "SpotiXCompanion.ps1"
+
+    $InstalledCompanionPattern = [regex]::Escape(
+        [System.IO.Path]::GetFullPath($InstalledCompanionScript)
+    )
+
+    try {
+        Get-CimInstance Win32_Process -ErrorAction Stop |
+            Where-Object {
+                $_.ProcessId -ne $CurrentProcessId -and
+                $_.Name -match '^(powershell|pwsh)(\.exe)?$' -and
+                (
+                    $_.CommandLine -match $InstalledCompanionPattern -or
+                    $_.CommandLine -match 'SpotiXTray-test-v[2-5](\.1)?\.ps1' -or
+                    $_.CommandLine -match 'SpotiXPlus-Companion-test-v6\.ps1' -or
+                    $_.CommandLine -match 'SpotiXPlus-test-v(?:[7-9]|10|11|12(?:\.1)?|13(?:\.1)?)\.ps1'
+                )
+            } |
+            ForEach-Object {
+                Invoke-CimMethod `
+                    -InputObject $_ `
+                    -MethodName Terminate `
+                    -ErrorAction SilentlyContinue | Out-Null
+            }
+
+        Start-Sleep -Milliseconds 350
+    }
+    catch {
+        # L'ancien compagnon n'est probablement pas lancé.
+    }
+}
+
+function RemoveSpotiXCompanion {
+    StopSpotiXCompanion
+
+    $CompanionFolder = Join-Path $env:LOCALAPPDATA "SpotiXPlus"
+    $StartupFolder = [Environment]::GetFolderPath("Startup")
+    $StartupShortcut = Join-Path $StartupFolder "SpotiX+ Companion.lnk"
+
+    Remove-Item -LiteralPath $StartupShortcut -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $CompanionFolder -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+
+function WriteSpotiXEmbeddedFile {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Path,
+
+        [Parameter(Mandatory = $true)]
+        [string] $IndentedContent,
+
+        [bool] $Utf8Bom = $true
+    )
+
+    $Content = [regex]::Replace(
+        $IndentedContent,
+        '(?m)^\t',
+        ''
+    )
+
+    $Encoding = New-Object System.Text.UTF8Encoding($Utf8Bom)
+
+    [System.IO.File]::WriteAllText(
+        $Path,
+        $Content,
+        $Encoding
+    )
+}
+
+function InstallSpotiXCompanion {
+    Write-Host (GetTranslation "companion-installing") -ForegroundColor Yellow
+
+    $SpotifyFolder = Join-Path $env:APPDATA "Spotify"
+    $SpotifyExe = Join-Path $SpotifyFolder "Spotify.exe"
+    $SpotifyIcon = Join-Path $SpotifyFolder "iconapp.ico"
+    $CompanionFolder = Join-Path $env:LOCALAPPDATA "SpotiXPlus"
+    $CompanionScript = Join-Path $CompanionFolder "SpotiXCompanion.ps1"
+    $LauncherScript = Join-Path $CompanionFolder "SpotiXLauncher.ps1"
+    $LauncherVbs = Join-Path $CompanionFolder "SpotiXLauncher.vbs"
+    $CompanionIcon = Join-Path $CompanionFolder "iconapp.ico"
+    $StartupFolder = [Environment]::GetFolderPath("Startup")
+    $StartupShortcut = Join-Path $StartupFolder "SpotiX+ Companion.lnk"
+    $WindowsPowerShell = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\powershell.exe"
+
+    if (-not (Test-Path -LiteralPath $SpotifyExe -PathType Leaf)) {
+        Write-Host (GetTranslation "companion-spotify-not-found") -ForegroundColor Red
+        return $false
+    }
+
+    try {
+        StopSpotiXCompanion
+        New-Item -ItemType Directory -Path $CompanionFolder -Force | Out-Null
+
+        $CompanionSource = @'
+	param(
+	    [switch]$NoAutoStartSpotify
+	)
+	
+	$ErrorActionPreference = 'Stop'
+	
+	if (-not $IsWindows -and $PSVersionTable.PSEdition -eq 'Core') {
+	    throw 'SpotiX+ Companion fonctionne uniquement sous Windows.'
+	}
+	
+	# WinForms doit tourner en 64 bits et sur un thread STA.
+	if (-not [Environment]::Is64BitProcess) {
+	    $PowerShell64 = "$env:WINDIR\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
+	    if (-not (Test-Path -LiteralPath $PowerShell64)) {
+	        throw 'PowerShell 64 bits est introuvable.'
+	    }
+	
+	    $Arguments = @(
+	        '-NoProfile', '-STA', '-WindowStyle', 'Hidden',
+	        '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`""
+	    )
+	    if ($NoAutoStartSpotify) { $Arguments += '-NoAutoStartSpotify' }
+	
+	    Start-Process -FilePath $PowerShell64 -ArgumentList $Arguments -WindowStyle Hidden
+	    exit
+	}
+	
+	if ([Threading.Thread]::CurrentThread.ApartmentState -ne [Threading.ApartmentState]::STA) {
+	    $CurrentPowerShell = (Get-Process -Id $PID).Path
+	    $Arguments = @(
+	        '-NoProfile', '-STA', '-WindowStyle', 'Hidden',
+	        '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`""
+	    )
+	    if ($NoAutoStartSpotify) { $Arguments += '-NoAutoStartSpotify' }
+	
+	    Start-Process -FilePath $CurrentPowerShell -ArgumentList $Arguments -WindowStyle Hidden
+	    exit
+	}
+	
+	$DataDirectory = Join-Path $env:LOCALAPPDATA 'SpotiXPlus'
+	$LogDirectory = Join-Path $env:LOCALAPPDATA 'SpotiX-Logs'
+	$LogPath = Join-Path $LogDirectory 'SpotiXCompanion.log'
+	$SpotifyLogDirectory = Join-Path (Join-Path $env:LOCALAPPDATA 'Spotify') 'Logs'
+	$TrayIdCachePath = Join-Path $DataDirectory 'spotify-tray-uid.txt'
+	
+	New-Item -Path $DataDirectory -ItemType Directory -Force | Out-Null
+	New-Item -Path $LogDirectory -ItemType Directory -Force | Out-Null
+	New-Item -Path $SpotifyLogDirectory -ItemType Directory -Force | Out-Null
+	
+	$Utf8Bom = New-Object System.Text.UTF8Encoding($true)
+	$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+	[System.IO.File]::WriteAllText($LogPath, '', $Utf8Bom)
+	
+	function Write-BootLog {
+	    param([Parameter(Mandatory)][string]$Message)
+	    try {
+	        $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'
+	        [System.IO.File]::AppendAllText(
+	            $LogPath,
+	            "$Timestamp | POWERSHELL | $Message`r`n",
+	            $Utf8NoBom
+	        )
+	    }
+	    catch { }
+	}
+	
+	$IconCandidates = @(
+	    (Join-Path $PSScriptRoot 'iconapp.ico'),
+	    (Join-Path $env:APPDATA 'Spotify\iconapp.ico'),
+	    (Join-Path $DataDirectory 'iconapp.ico')
+	)
+	
+	$IconPath = $IconCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+	if (-not $IconPath) {
+	    $DownloadedIcon = Join-Path $DataDirectory 'iconapp.ico'
+	    try {
+	        Invoke-WebRequest -Uri 'https://spotixplus.fr/assets/icons/iconapp.ico' -OutFile $DownloadedIcon -UseBasicParsing
+	        $IconPath = $DownloadedIcon
+	    }
+	    catch {
+	        $IconPath = ''
+	    }
+	}
+	
+	Add-Type -AssemblyName System.Windows.Forms
+	Add-Type -AssemblyName System.Drawing
+	
+	Write-BootLog "Démarrage. PowerShell=$($PSVersionTable.PSVersion), Processus64=$([Environment]::Is64BitProcess), STA=$([Threading.Thread]::CurrentThread.ApartmentState)."
+	
+	$Source = @'
+	using System;
+	using System.Collections.Generic;
+	using System.Diagnostics;
+	using System.Drawing;
+	using System.Globalization;
+	using System.IO;
+	using System.Net;
+	using System.Runtime.InteropServices;
+	using System.Text;
+	using System.Threading;
+	using System.Windows.Forms;
+	using Microsoft.Win32;
+	
+	namespace SpotiXPlusCompanion
+	{
+	    internal static class NativeMethods
+	    {
+	        internal const int SW_HIDE = 0;
+	        internal const int SW_SHOW = 5;
+	        internal const int SW_RESTORE = 9;
+	        internal const uint GW_OWNER = 4;
+	
+	        internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern bool SetForegroundWindow(IntPtr hWnd);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern bool IsWindow(IntPtr hWnd);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern bool IsWindowVisible(IntPtr hWnd);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+	
+	        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+	        internal static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+	
+	        [DllImport("user32.dll")]
+	        internal static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+	
+	        internal static readonly IntPtr HWND_BROADCAST = new IntPtr(0xffff);
+	        internal const uint WM_SETTINGCHANGE = 0x001A;
+	        internal const uint SMTO_ABORTIFHUNG = 0x0002;
+	
+	        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+	        internal static extern IntPtr SendMessageTimeout(
+	            IntPtr hWnd,
+	            uint Msg,
+	            IntPtr wParam,
+	            string lParam,
+	            uint fuFlags,
+	            uint uTimeout,
+	            out IntPtr lpdwResult);
+	    }
+	
+	    internal sealed class NativeSpotifyTrayRemover : IDisposable
+	    {
+	        private const uint NIM_DELETE = 0x00000002;
+	        private static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
+	
+	        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+	        private struct NOTIFYICONDATA
+	        {
+	            internal uint cbSize;
+	            internal IntPtr hWnd;
+	            internal uint uID;
+	            internal uint uFlags;
+	            internal uint uCallbackMessage;
+	            internal IntPtr hIcon;
+	
+	            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+	            internal string szTip;
+	
+	            internal uint dwState;
+	            internal uint dwStateMask;
+	
+	            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+	            internal string szInfo;
+	
+	            internal uint uTimeoutOrVersion;
+	
+	            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+	            internal string szInfoTitle;
+	
+	            internal uint dwInfoFlags;
+	            internal Guid guidItem;
+	            internal IntPtr hBalloonIcon;
+	        }
+	
+	        [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+	        [return: MarshalAs(UnmanagedType.Bool)]
+	        private static extern bool Shell_NotifyIconW(uint dwMessage, ref NOTIFYICONDATA lpData);
+	
+	        [DllImport("user32.dll", SetLastError = true)]
+	        private static extern bool EnumChildWindows(
+	            IntPtr hWndParent,
+	            NativeMethods.EnumWindowsProc lpEnumFunc,
+	            IntPtr lParam);
+	
+	        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+	        private static extern IntPtr FindWindowExW(
+	            IntPtr hWndParent,
+	            IntPtr hWndChildAfter,
+	            string lpszClass,
+	            string lpszWindow);
+	
+	        private sealed class IconIdentifier
+	        {
+	            internal readonly IntPtr HWnd;
+	            internal readonly uint Id;
+	
+	            internal IconIdentifier(IntPtr hWnd, uint id)
+	            {
+	                HWnd = hWnd;
+	                Id = id;
+	            }
+	
+	            public override string ToString()
+	            {
+	                return "hWnd=0x" + HWnd.ToInt64().ToString("X") + ", uID=" + Id;
+	            }
+	        }
+	
+	        private readonly Action<string> log;
+	        private readonly string cachePath;
+	        private readonly object stateLock = new object();
+	        private readonly System.Threading.Timer workerTimer;
+	
+	        private bool enabled;
+	        private bool disposed;
+	        private int generation;
+	        private int callbackRunning;
+	        private string processFingerprint = String.Empty;
+	        private IconIdentifier knownIdentifier;
+	        private Nullable<uint> cachedId;
+	        private int retryStage;
+	        private int scanFailures;
+	        private bool scanFailureLogged;
+	
+	        internal NativeSpotifyTrayRemover(Action<string> logger, string identifierCachePath)
+	        {
+	            log = logger;
+	            cachePath = identifierCachePath;
+	            cachedId = LoadCachedId();
+	            workerTimer = new System.Threading.Timer(
+	                WorkerCallback,
+	                null,
+	                Timeout.Infinite,
+	                Timeout.Infinite);
+	
+	            if (cachedId.HasValue)
+	                log("Identifiant Spotify mémorisé chargé : uID=" + cachedId.Value + ".");
+	        }
+	
+	        internal void Start()
+	        {
+	            int currentGeneration;
+	
+	            lock (stateLock)
+	            {
+	                if (disposed)
+	                    return;
+	
+	                enabled = true;
+	                generation++;
+	                currentGeneration = generation;
+	                processFingerprint = String.Empty;
+	                knownIdentifier = null;
+	                retryStage = 0;
+	                scanFailures = 0;
+	                scanFailureLogged = false;
+	            }
+	
+	            Schedule(50, currentGeneration);
+	        }
+	
+	        internal void Stop()
+	        {
+	            lock (stateLock)
+	            {
+	                enabled = false;
+	                generation++;
+	                processFingerprint = String.Empty;
+	                knownIdentifier = null;
+	                retryStage = 0;
+	                scanFailures = 0;
+	
+	                try { workerTimer.Change(Timeout.Infinite, Timeout.Infinite); }
+	                catch (ObjectDisposedException) { }
+	            }
+	        }
+	
+	        private Nullable<uint> LoadCachedId()
+	        {
+	            try
+	            {
+	                if (String.IsNullOrWhiteSpace(cachePath) || !File.Exists(cachePath))
+	                    return null;
+	
+	                string value = File.ReadAllText(cachePath).Trim();
+	                uint parsed;
+	                if (UInt32.TryParse(value, out parsed))
+	                    return parsed;
+	            }
+	            catch (Exception ex)
+	            {
+	                log("Lecture du cache d'identifiant ignorée : " + ex.Message);
+	            }
+	
+	            return null;
+	        }
+	
+	        private void SaveCachedId(uint id)
+	        {
+	            cachedId = id;
+	
+	            try
+	            {
+	                string directory = Path.GetDirectoryName(cachePath);
+	                if (!String.IsNullOrWhiteSpace(directory))
+	                    Directory.CreateDirectory(directory);
+	
+	                File.WriteAllText(cachePath, id.ToString());
+	            }
+	            catch (Exception ex)
+	            {
+	                log("Écriture du cache d'identifiant ignorée : " + ex.Message);
+	            }
+	        }
+	
+	        private void Schedule(int delayMilliseconds, int expectedGeneration)
+	        {
+	            lock (stateLock)
+	            {
+	                if (disposed || !enabled || generation != expectedGeneration)
+	                    return;
+	
+	                try
+	                {
+	                    workerTimer.Change(
+	                        Math.Max(1, delayMilliseconds),
+	                        Timeout.Infinite);
+	                }
+	                catch (ObjectDisposedException) { }
+	            }
+	        }
+	
+	        private void WorkerCallback(object state)
+	        {
+	            if (Interlocked.Exchange(ref callbackRunning, 1) != 0)
+	                return;
+	
+	            int currentGeneration;
+	
+	            try
+	            {
+	                lock (stateLock)
+	                {
+	                    if (disposed || !enabled)
+	                        return;
+	
+	                    currentGeneration = generation;
+	                }
+	
+	                HashSet<uint> spotifyProcessIds = GetSpotifyProcessIds();
+	                if (spotifyProcessIds.Count == 0)
+	                {
+	                    Schedule(1000, currentGeneration);
+	                    return;
+	                }
+	
+	                string fingerprint = BuildFingerprint(spotifyProcessIds);
+	                IconIdentifier identifier;
+	
+	                lock (stateLock)
+	                {
+	                    if (generation != currentGeneration || !enabled)
+	                        return;
+	
+	                    if (!String.Equals(processFingerprint, fingerprint, StringComparison.Ordinal))
+	                    {
+	                        processFingerprint = fingerprint;
+	                        knownIdentifier = null;
+	                        retryStage = 0;
+	                        scanFailures = 0;
+	                        scanFailureLogged = false;
+	                    }
+	
+	                    identifier = knownIdentifier;
+	                }
+	
+	                if (identifier == null)
+	                {
+	                    identifier = FindIdentifier(spotifyProcessIds);
+	
+	                    if (identifier != null)
+	                    {
+	                        lock (stateLock)
+	                        {
+	                            if (generation != currentGeneration || !enabled)
+	                                return;
+	
+	                            knownIdentifier = identifier;
+	                            retryStage = 0;
+	                        }
+	
+	                        SaveCachedId(identifier.Id);
+	                        log("Icône Spotify supprimée ; identifiant conservé pour les prochains passages : " +
+	                            identifier + ".");
+	                        Schedule(400, currentGeneration);
+	                        return;
+	                    }
+	
+	                    scanFailures++;
+	
+	                    if (scanFailures >= 5 && !scanFailureLogged)
+	                    {
+	                        scanFailureLogged = true;
+	                        log("Suppression Spotify : aucun identifiant valide trouvé après " +
+	                            scanFailures + " recherches. Nouvelle tentative espacée.");
+	                    }
+	
+	                    // Le scan complet est coûteux : rapide seulement au lancement,
+	                    // puis fortement ralenti s'il ne trouve rien.
+	                    Schedule(scanFailures < 5 ? 1200 : 10000, currentGeneration);
+	                    return;
+	                }
+	
+	                // Une seule requête NIM_DELETE est envoyée. Aucun nouveau scan 0..1024
+	                // tant que les processus Spotify n'ont pas changé.
+	                DeleteByIdentifier(identifier.HWnd, identifier.Id);
+	
+	                int delay;
+	                lock (stateLock)
+	                {
+	                    if (generation != currentGeneration || !enabled)
+	                        return;
+	
+	                    retryStage++;
+	
+	                    // Quelques reprises rapprochées au démarrage, puis seulement
+	                    // une requête légère toutes les 2 secondes.
+	                    if (retryStage == 1)
+	                        delay = 600;
+	                    else if (retryStage == 2)
+	                        delay = 1200;
+	                    else
+	                        delay = 2000;
+	                }
+	
+	                Schedule(delay, currentGeneration);
+	            }
+	            catch (Exception ex)
+	            {
+	                try { log("Suppression Spotify en arrière-plan : " + ex.Message); }
+	                catch { }
+	
+	                lock (stateLock)
+	                {
+	                    currentGeneration = generation;
+	                }
+	
+	                Schedule(5000, currentGeneration);
+	            }
+	            finally
+	            {
+	                Interlocked.Exchange(ref callbackRunning, 0);
+	            }
+	        }
+	
+	        private static string BuildFingerprint(HashSet<uint> processIds)
+	        {
+	            List<uint> sorted = new List<uint>(processIds);
+	            sorted.Sort();
+	
+	            StringBuilder builder = new StringBuilder();
+	            foreach (uint processId in sorted)
+	            {
+	                if (builder.Length > 0)
+	                    builder.Append(',');
+	
+	                builder.Append(processId);
+	            }
+	
+	            return builder.ToString();
+	        }
+	
+	        private static HashSet<uint> GetSpotifyProcessIds()
+	        {
+	            Process[] processes = Process.GetProcessesByName("Spotify");
+	            HashSet<uint> result = new HashSet<uint>();
+	
+	            try
+	            {
+	                foreach (Process process in processes)
+	                    result.Add((uint)process.Id);
+	            }
+	            finally
+	            {
+	                foreach (Process process in processes)
+	                    process.Dispose();
+	            }
+	
+	            return result;
+	        }
+	
+	        private IconIdentifier FindIdentifier(HashSet<uint> spotifyProcessIds)
+	        {
+	            List<IntPtr> windows = EnumerateSpotifyWindows(spotifyProcessIds);
+	            if (windows.Count == 0)
+	                return null;
+	
+	            // Le uID trouvé lors du précédent lancement est presque toujours stable.
+	            if (cachedId.HasValue)
+	            {
+	                foreach (IntPtr hWnd in windows)
+	                {
+	                    if (DeleteByIdentifier(hWnd, cachedId.Value))
+	                        return new IconIdentifier(hWnd, cachedId.Value);
+	                }
+	            }
+	
+	            uint[] commonIds = new uint[] { 0, 1, 2, 3, 4, 5, 10, 11, 12, 100, 101, 102, 1000 };
+	
+	            foreach (IntPtr hWnd in windows)
+	            {
+	                foreach (uint id in commonIds)
+	                {
+	                    if (cachedId.HasValue && id == cachedId.Value)
+	                        continue;
+	
+	                    if (DeleteByIdentifier(hWnd, id))
+	                        return new IconIdentifier(hWnd, id);
+	                }
+	            }
+	
+	            // Dernier recours : un seul scan complet, sur un thread de fond,
+	            // arrêté dès que l'identifiant valide est trouvé.
+	            foreach (IntPtr hWnd in windows)
+	            {
+	                for (uint id = 0; id <= 1024; id++)
+	                {
+	                    if (cachedId.HasValue && id == cachedId.Value)
+	                        continue;
+	
+	                    bool isCommon = false;
+	                    foreach (uint commonId in commonIds)
+	                    {
+	                        if (id == commonId)
+	                        {
+	                            isCommon = true;
+	                            break;
+	                        }
+	                    }
+	
+	                    if (isCommon)
+	                        continue;
+	
+	                    if (DeleteByIdentifier(hWnd, id))
+	                        return new IconIdentifier(hWnd, id);
+	                }
+	            }
+	
+	            return null;
+	        }
+	
+	        private static bool DeleteByIdentifier(IntPtr hWnd, uint id)
+	        {
+	            NOTIFYICONDATA data = new NOTIFYICONDATA();
+	            data.cbSize = (uint)Marshal.SizeOf(typeof(NOTIFYICONDATA));
+	            data.hWnd = hWnd;
+	            data.uID = id;
+	            data.szTip = String.Empty;
+	            data.szInfo = String.Empty;
+	            data.szInfoTitle = String.Empty;
+	
+	            return Shell_NotifyIconW(NIM_DELETE, ref data);
+	        }
+	
+	        private static List<IntPtr> EnumerateSpotifyWindows(HashSet<uint> spotifyProcessIds)
+	        {
+	            HashSet<IntPtr> result = new HashSet<IntPtr>();
+	            List<IntPtr> topLevel = new List<IntPtr>();
+	
+	            NativeMethods.EnumWindows(
+	                delegate(IntPtr hWnd, IntPtr lParam)
+	                {
+	                    uint processId;
+	                    NativeMethods.GetWindowThreadProcessId(hWnd, out processId);
+	
+	                    if (spotifyProcessIds.Contains(processId))
+	                    {
+	                        result.Add(hWnd);
+	                        topLevel.Add(hWnd);
+	                    }
+	
+	                    return true;
+	                },
+	                IntPtr.Zero);
+	
+	            foreach (IntPtr parent in topLevel)
+	            {
+	                EnumChildWindows(
+	                    parent,
+	                    delegate(IntPtr hWnd, IntPtr lParam)
+	                    {
+	                        uint processId;
+	                        NativeMethods.GetWindowThreadProcessId(hWnd, out processId);
+	                        if (spotifyProcessIds.Contains(processId))
+	                            result.Add(hWnd);
+	                        return true;
+	                    },
+	                    IntPtr.Zero);
+	            }
+	
+	            IntPtr messageWindow = IntPtr.Zero;
+	            while (true)
+	            {
+	                messageWindow = FindWindowExW(HWND_MESSAGE, messageWindow, null, null);
+	                if (messageWindow == IntPtr.Zero)
+	                    break;
+	
+	                uint processId;
+	                NativeMethods.GetWindowThreadProcessId(messageWindow, out processId);
+	                if (spotifyProcessIds.Contains(processId))
+	                    result.Add(messageWindow);
+	            }
+	
+	            return new List<IntPtr>(result);
+	        }
+	
+	        public void Dispose()
+	        {
+	            lock (stateLock)
+	            {
+	                if (disposed)
+	                    return;
+	
+	                disposed = true;
+	                enabled = false;
+	                generation++;
+	
+	                try { workerTimer.Change(Timeout.Infinite, Timeout.Infinite); }
+	                catch { }
+	
+	                workerTimer.Dispose();
+	                knownIdentifier = null;
+	            }
+	        }
+	    }
+	
+	    internal sealed class CompanionContext : ApplicationContext
+	    {
+	        private readonly NotifyIcon notifyIcon;
+	        private readonly Icon loadedIcon;
+	        private readonly System.Windows.Forms.Timer monitorTimer;
+	        private readonly string logPath;
+	        private readonly string spotifyLogsDirectory;
+	        private readonly bool autoStartSpotify;
+	        private readonly bool isFrench;
+	        private readonly ToolStripMenuItem visibilitySpotifyItem;
+	        private readonly ToolStripMenuItem manageSpotiXItem;
+	        private readonly ContextMenuStrip contextMenu;
+	        private readonly NativeSpotifyTrayRemover trayRemover;
+	        private readonly object logLock = new object();
+	        private readonly object spotifyOutputLock = new object();
+	        private readonly object launchedProcessesLock = new object();
+	        private readonly List<Process> launchedSpotifyProcesses = new List<Process>();
+	        private readonly EventWaitHandle launchSpotifyEvent;
+	        private readonly Thread launchSpotifyThread;
+	        private volatile bool shuttingDown;
+	        private volatile bool launchRequested;
+	        private bool autoStartAttempted;
+	        private bool waitingLogged;
+	        private bool lastSpotifyRunning;
+	        private bool manageScriptBusy;
+	        private int initialTicks;
+	        private IntPtr spotifyWindowHandle = IntPtr.Zero;
+	
+	        internal CompanionContext(
+	            string iconPath,
+	            string outputLogPath,
+	            string spotifyOutputDirectory,
+	            string trayIdCachePath,
+	            bool shouldAutoStartSpotify)
+	        {
+	            logPath = outputLogPath;
+	            spotifyLogsDirectory = spotifyOutputDirectory;
+	            Directory.CreateDirectory(spotifyLogsDirectory);
+	            autoStartSpotify = shouldAutoStartSpotify;
+	            isFrench = String.Equals(
+	                CultureInfo.CurrentUICulture.TwoLetterISOLanguageName,
+	                "fr",
+	                StringComparison.OrdinalIgnoreCase);
+	            loadedIcon = LoadTrayIcon(iconPath);
+	            trayRemover = new NativeSpotifyTrayRemover(Log, trayIdCachePath);
+	
+	            bool launchEventCreated;
+	            launchSpotifyEvent = new EventWaitHandle(
+	                false,
+	                EventResetMode.AutoReset,
+	                @"Local\SpotiXPlus_Companion_LaunchSpotify",
+	                out launchEventCreated);
+	            launchSpotifyThread = new Thread(WaitForSpotifyLaunchRequests);
+	            launchSpotifyThread.IsBackground = true;
+	            launchSpotifyThread.Name = "SpotiX+ Spotify launcher";
+	            launchSpotifyThread.Start();
+	
+	            contextMenu = new ContextMenuStrip();
+	            ContextMenuStrip menu = contextMenu;
+	            menu.Opening += delegate { UpdateVisibilityMenu(); };
+	
+	            visibilitySpotifyItem = new ToolStripMenuItem(T(
+	                "Minimiser dans la barre des tâches",
+	                "Minimize to tray"));
+	            visibilitySpotifyItem.Click += delegate { ToggleSpotifyWindow(); };
+	            menu.Items.Add(visibilitySpotifyItem);
+	
+	            ToolStripMenuItem reloadSpotify = new ToolStripMenuItem(T("Recharger Spotify", "Reload Spotify"));
+	            reloadSpotify.Click += delegate { ReloadSpotify(); };
+	            menu.Items.Add(reloadSpotify);
+	
+	            menu.Items.Add(new ToolStripSeparator());
+	
+	            ToolStripMenuItem settingsFolder = new ToolStripMenuItem(
+	                T("Paramètres de SpotiX+", "SpotiX+ Settings"));
+	
+	            ToolStripMenuItem openSpotiXLogs = new ToolStripMenuItem(
+	                T("Logs de SpotiX+", "SpotiX+ logs"));
+	            openSpotiXLogs.Click += delegate { OpenSpotiXLogs(); };
+	            settingsFolder.DropDownItems.Add(openSpotiXLogs);
+	
+	            ToolStripMenuItem openSpotifyLogs = new ToolStripMenuItem(
+	                T("Logs de Spotify", "Spotify logs"));
+	            openSpotifyLogs.Click += delegate { OpenSpotifyLogs(); };
+	            settingsFolder.DropDownItems.Add(openSpotifyLogs);
+	
+	            settingsFolder.DropDownItems.Add(new ToolStripSeparator());
+	
+	            manageSpotiXItem = new ToolStripMenuItem(
+	                T("Gérer SpotiX+", "Manage SpotiX+"));
+	            manageSpotiXItem.ToolTipText = T(
+	                "Configurer, réparer ou réinstaller SpotiX+, gérer la qualité audio etc..",
+	                "Configure, repair or reinstall SpotiX+, manage audio quality, etc.");
+	            manageSpotiXItem.Click += delegate { ManageSpotiXPlus(); };
+	            settingsFolder.DropDownItems.Add(manageSpotiXItem);
+	
+	            menu.Items.Add(settingsFolder);
+	
+	            ToolStripMenuItem linksFolder = new ToolStripMenuItem(T("Liens et aide", "Links and help"));
+	
+	            ToolStripMenuItem officialWebsite = new ToolStripMenuItem(T("Site officiel", "Official website"));
+	            officialWebsite.Click += delegate { OpenUrl("https://spotixplus.fr/"); };
+	            linksFolder.DropDownItems.Add(officialWebsite);
+	
+	            ToolStripMenuItem githubPage = new ToolStripMenuItem(T("Page GitHub", "GitHub page"));
+	            githubPage.Click += delegate { OpenUrl("https://github.com/AgoyaSpotix/spotixplus-reborn"); };
+	            linksFolder.DropDownItems.Add(githubPage);
+	
+	            ToolStripMenuItem discordPage = new ToolStripMenuItem("Discord");
+	            discordPage.Click += delegate { OpenUrl("https://discord.gg/xcCsz4QpTA"); };
+	            linksFolder.DropDownItems.Add(discordPage);
+	
+	            menu.Items.Add(linksFolder);
+	            menu.Items.Add(new ToolStripSeparator());
+	
+	            ToolStripMenuItem quitSpotify = new ToolStripMenuItem(T("Quitter Spotify", "Quit Spotify"));
+	            quitSpotify.Click += delegate { QuitSpotify(); };
+	            menu.Items.Add(quitSpotify);
+	
+	            notifyIcon = new NotifyIcon();
+	            notifyIcon.Icon = loadedIcon;
+	            notifyIcon.Text = "SpotiX+ Reborn";
+	            notifyIcon.ContextMenuStrip = menu;
+	            notifyIcon.Visible = false;
+	            notifyIcon.MouseDoubleClick += delegate { ShowOrStartSpotify(); };
+	
+	            Log("Démarrage de SpotiX+ Companion. Langue=" + (isFrench ? "fr" : "en") + ", icône='" + iconPath + "'.");
+	            Log("Le processus reste actif en arrière-plan ; l'icône SpotiX+ apparaît uniquement lorsque Spotify tourne.");
+	            Log("Suppression native de l’icône Spotify active sur un thread de fond ; journalisation Spotify détaillée disponible pour les lancements effectués par SpotiX+.");
+	
+	            monitorTimer = new System.Windows.Forms.Timer();
+	            monitorTimer.Interval = 750;
+	            monitorTimer.Tick += MonitorTick;
+	            monitorTimer.Start();
+	        }
+	
+	        private string T(string french, string english)
+	        {
+	            return isFrench ? french : english;
+	        }
+	
+	        private void WaitForSpotifyLaunchRequests()
+	        {
+	            while (!shuttingDown)
+	            {
+	                try
+	                {
+	                    if (!launchSpotifyEvent.WaitOne(1000))
+	                        continue;
+	                }
+	                catch
+	                {
+	                    break;
+	                }
+	
+	                if (shuttingDown)
+	                    break;
+	
+	                launchRequested = true;
+	            }
+	        }
+	
+	        private static Icon LoadTrayIcon(string iconPath)
+	        {
+	            try
+	            {
+	                if (String.IsNullOrWhiteSpace(iconPath) || !File.Exists(iconPath))
+	                    return (Icon)SystemIcons.Application.Clone();
+	
+	                return new Icon(iconPath, 32, 32);
+	            }
+	            catch
+	            {
+	                try { return new Icon(iconPath); }
+	                catch { return (Icon)SystemIcons.Application.Clone(); }
+	            }
+	        }
+	
+	        private void MonitorTick(object sender, EventArgs e)
+	        {
+	            initialTicks++;
+	
+	            if (launchRequested)
+	            {
+	                launchRequested = false;
+	                Log("Demande de lancement ou d’affichage de Spotify reçue depuis un raccourci SpotiX+.");
+	                ShowOrStartSpotify();
+	            }
+	
+	            if (autoStartSpotify && !autoStartAttempted && initialTicks >= 2)
+	            {
+	                autoStartAttempted = true;
+	                StartSpotifyIfNeeded();
+	            }
+	
+	            bool spotifyRunning = IsSpotifyRunning();
+	
+	            if (spotifyRunning != lastSpotifyRunning)
+	            {
+	                lastSpotifyRunning = spotifyRunning;
+	                if (spotifyRunning)
+	                {
+	                    notifyIcon.Text = T("SpotiX+ Reborn - Spotify actif", "SpotiX+ Reborn - Spotify running");
+	                    notifyIcon.Visible = true;
+	                    trayRemover.Start();
+	                    waitingLogged = false;
+	                    FindSpotifyMainWindow();
+	                    UpdateVisibilityMenu();
+	                    Log("Spotify détecté : icône SpotiX+ affichée.");
+	                }
+	                else
+	                {
+	                    notifyIcon.Visible = false;
+	                    trayRemover.Stop();
+	                    spotifyWindowHandle = IntPtr.Zero;
+	                    Log("Spotify fermé : icône SpotiX+ masquée. Le compagnon attend le prochain lancement.");
+	                }
+	            }
+	
+	            if (!spotifyRunning && autoStartAttempted && !waitingLogged && initialTicks >= 120)
+	            {
+	                waitingLogged = true;
+	                Log("Spotify n'est pas lancé. Le compagnon reste invisible en arrière-plan.");
+	            }
+	
+	            // Ce minuteur ne fait plus aucun scan d'icône. Il surveille seulement
+	            // l'état de Spotify ; la suppression native tourne sur un thread séparé.
+	            monitorTimer.Interval = spotifyRunning ? 750 : 1000;
+	        }
+	
+	        private static bool IsSpotifyRunning()
+	        {
+	            Process[] processes = Process.GetProcessesByName("Spotify");
+	            bool result = processes.Length > 0;
+	            foreach (Process process in processes)
+	                process.Dispose();
+	            return result;
+	        }
+	
+	        private List<IntPtr> GetSpotifyTopLevelWindows()
+	        {
+	            Process[] processes = Process.GetProcessesByName("Spotify");
+	            HashSet<uint> spotifyProcessIds = new HashSet<uint>();
+	            List<IntPtr> windows = new List<IntPtr>();
+	
+	            try
+	            {
+	                foreach (Process process in processes)
+	                    spotifyProcessIds.Add((uint)process.Id);
+	
+	                NativeMethods.EnumWindows(
+	                    delegate(IntPtr hWnd, IntPtr lParam)
+	                    {
+	                        uint processId;
+	                        NativeMethods.GetWindowThreadProcessId(hWnd, out processId);
+	                        if (!spotifyProcessIds.Contains(processId))
+	                            return true;
+	
+	                        if (NativeMethods.GetWindow(hWnd, NativeMethods.GW_OWNER) != IntPtr.Zero)
+	                            return true;
+	
+	                        StringBuilder className = new StringBuilder(256);
+	                        NativeMethods.GetClassName(hWnd, className, className.Capacity);
+	                        string classValue = className.ToString();
+	
+	                        if (classValue.IndexOf("Chrome_WidgetWin", StringComparison.OrdinalIgnoreCase) >= 0)
+	                            windows.Add(hWnd);
+	
+	                        return true;
+	                    },
+	                    IntPtr.Zero);
+	            }
+	            finally
+	            {
+	                foreach (Process process in processes)
+	                    process.Dispose();
+	            }
+	
+	            return windows;
+	        }
+	
+	        private IntPtr FindSpotifyMainWindow()
+	        {
+	            if (spotifyWindowHandle != IntPtr.Zero && NativeMethods.IsWindow(spotifyWindowHandle))
+	                return spotifyWindowHandle;
+	
+	            List<IntPtr> windows = GetSpotifyTopLevelWindows();
+	            foreach (IntPtr window in windows)
+	            {
+	                if (NativeMethods.IsWindowVisible(window))
+	                {
+	                    spotifyWindowHandle = window;
+	                    return window;
+	                }
+	            }
+	
+	            if (windows.Count > 0)
+	            {
+	                spotifyWindowHandle = windows[0];
+	                return spotifyWindowHandle;
+	            }
+	
+	            spotifyWindowHandle = IntPtr.Zero;
+	            return IntPtr.Zero;
+	        }
+	
+	        private bool AnySpotifyWindowVisible()
+	        {
+	            List<IntPtr> windows = GetSpotifyTopLevelWindows();
+	            foreach (IntPtr window in windows)
+	            {
+	                if (NativeMethods.IsWindowVisible(window))
+	                    return true;
+	            }
+	            return false;
+	        }
+	
+	        private void HideAllSpotifyWindows()
+	        {
+	            List<IntPtr> windows = GetSpotifyTopLevelWindows();
+	            foreach (IntPtr window in windows)
+	                NativeMethods.ShowWindowAsync(window, NativeMethods.SW_HIDE);
+	        }
+	
+	        private void StartSpotifyIfNeeded()
+	        {
+	            if (IsSpotifyRunning())
+	            {
+	                Log(
+	                    "Spotify était déjà lancé. Les logs internes détaillés de cette session " +
+	                    "ne peuvent pas être activés après son démarrage.");
+	                return;
+	            }
+	
+	            string spotifyPath = Path.Combine(
+	                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+	                "Spotify",
+	                "Spotify.exe");
+	
+	            try
+	            {
+	                if (File.Exists(spotifyPath))
+	                {
+	                    StartSpotifyWithLogging(spotifyPath);
+	                }
+	                else
+	                {
+	                    Process.Start(new ProcessStartInfo("spotify:") { UseShellExecute = true });
+	                    Log(
+	                        "Spotify démarré via le protocole spotify:. " +
+	                        "La journalisation Chromium détaillée n'est pas disponible avec ce mode.");
+	                }
+	            }
+	            catch (Exception ex)
+	            {
+	                Log("Impossible de démarrer Spotify avec les logs : " + ex.Message);
+	                ShowLocalizedMessage(
+	                    T(
+	                        "Spotify n'a pas pu être démarré avec la journalisation active.",
+	                        "Spotify could not be started with logging enabled."),
+	                    MessageBoxIcon.Error);
+	            }
+	        }
+	
+	        private void StartSpotifyWithLogging(string spotifyPath)
+	        {
+	            Directory.CreateDirectory(spotifyLogsDirectory);
+	
+	            string sessionId = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+	            string chromiumLogPath = Path.Combine(
+	                spotifyLogsDirectory,
+	                "Spotify-Chromium-" + sessionId + ".log");
+	            string stdoutLogPath = Path.Combine(
+	                spotifyLogsDirectory,
+	                "Spotify-stdout-" + sessionId + ".log");
+	            string stderrLogPath = Path.Combine(
+	                spotifyLogsDirectory,
+	                "Spotify-stderr-" + sessionId + ".log");
+	            string sessionInfoPath = Path.Combine(
+	                spotifyLogsDirectory,
+	                "Spotify-session-" + sessionId + ".txt");
+	
+	            File.WriteAllText(
+	                sessionInfoPath,
+	                "SpotiX+ Spotify logging session" + Environment.NewLine +
+	                "Started: " + DateTime.Now.ToString("O") + Environment.NewLine +
+	                "Spotify: " + spotifyPath + Environment.NewLine +
+	                "Chromium log: " + chromiumLogPath + Environment.NewLine +
+	                "Standard output: " + stdoutLogPath + Environment.NewLine +
+	                "Standard error: " + stderrLogPath + Environment.NewLine,
+	                Encoding.UTF8);
+	
+	            ProcessStartInfo startInfo = new ProcessStartInfo();
+	            startInfo.FileName = spotifyPath;
+	            startInfo.Arguments =
+	                "--enable-logging --v=1 --log-file=" + QuoteArgument(chromiumLogPath);
+	            startInfo.WorkingDirectory = Path.GetDirectoryName(spotifyPath);
+	            startInfo.UseShellExecute = false;
+	            startInfo.CreateNoWindow = true;
+	            startInfo.RedirectStandardOutput = true;
+	            startInfo.RedirectStandardError = true;
+	            startInfo.EnvironmentVariables["CHROME_LOG_FILE"] = chromiumLogPath;
+	
+	            Process spotifyProcess = new Process();
+	            spotifyProcess.StartInfo = startInfo;
+	            spotifyProcess.EnableRaisingEvents = true;
+	
+	            spotifyProcess.OutputDataReceived +=
+	                delegate(object sender, DataReceivedEventArgs eventArgs)
+	                {
+	                    if (!String.IsNullOrEmpty(eventArgs.Data))
+	                        AppendSpotifyOutput(stdoutLogPath, eventArgs.Data);
+	                };
+	
+	            spotifyProcess.ErrorDataReceived +=
+	                delegate(object sender, DataReceivedEventArgs eventArgs)
+	                {
+	                    if (!String.IsNullOrEmpty(eventArgs.Data))
+	                        AppendSpotifyOutput(stderrLogPath, eventArgs.Data);
+	                };
+	
+	            spotifyProcess.Exited +=
+	                delegate(object sender, EventArgs eventArgs)
+	                {
+	                    try
+	                    {
+	                        File.AppendAllText(
+	                            sessionInfoPath,
+	                            "Launcher process exited: " +
+	                            DateTime.Now.ToString("O") +
+	                            Environment.NewLine,
+	                            Encoding.UTF8);
+	                    }
+	                    catch { }
+	                };
+	
+	            if (!spotifyProcess.Start())
+	                throw new InvalidOperationException("Spotify.exe n'a pas démarré.");
+	
+	            lock (launchedProcessesLock)
+	            {
+	                launchedSpotifyProcesses.Add(spotifyProcess);
+	            }
+	
+	            spotifyProcess.BeginOutputReadLine();
+	            spotifyProcess.BeginErrorReadLine();
+	
+	            Log(
+	                "Spotify démarré avec les logs détaillés. Chromium='" +
+	                chromiumLogPath + "', stdout='" + stdoutLogPath +
+	                "', stderr='" + stderrLogPath + "'.");
+	        }
+	
+	        private static string QuoteArgument(string value)
+	        {
+	            if (String.IsNullOrEmpty(value))
+	                return "\"\"";
+	
+	            return "\"" + value.Replace("\"", "\\\"") + "\"";
+	        }
+	
+	        private void AppendSpotifyOutput(string filePath, string line)
+	        {
+	            lock (spotifyOutputLock)
+	            {
+	                try
+	                {
+	                    File.AppendAllText(
+	                        filePath,
+	                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") +
+	                        " | " + line + Environment.NewLine,
+	                        Encoding.UTF8);
+	                }
+	                catch { }
+	            }
+	        }
+	
+	        private void ShowOrStartSpotify()
+	        {
+	            IntPtr window = FindSpotifyMainWindow();
+	            if (window == IntPtr.Zero)
+	            {
+	                StartSpotifyIfNeeded();
+	                return;
+	            }
+	
+	            NativeMethods.ShowWindowAsync(window, NativeMethods.SW_SHOW);
+	            NativeMethods.ShowWindowAsync(window, NativeMethods.SW_RESTORE);
+	            NativeMethods.SetForegroundWindow(window);
+	            UpdateVisibilityMenu();
+	            Log("Fenêtre Spotify affichée.");
+	        }
+	
+	        private void ToggleSpotifyWindow()
+	        {
+	            if (!IsSpotifyRunning())
+	            {
+	                StartSpotifyIfNeeded();
+	                return;
+	            }
+	
+	            if (AnySpotifyWindowVisible())
+	            {
+	                HideAllSpotifyWindows();
+	                Log("Fenêtre Spotify cachée : Spotify et la musique restent actifs.");
+	            }
+	            else
+	            {
+	                IntPtr window = FindSpotifyMainWindow();
+	                if (window != IntPtr.Zero)
+	                {
+	                    NativeMethods.ShowWindowAsync(window, NativeMethods.SW_SHOW);
+	                    NativeMethods.ShowWindowAsync(window, NativeMethods.SW_RESTORE);
+	                    NativeMethods.SetForegroundWindow(window);
+	                    Log("Fenêtre Spotify réaffichée.");
+	                }
+	            }
+	
+	            UpdateVisibilityMenu();
+	        }
+	
+	        private void UpdateVisibilityMenu()
+	        {
+	            IntPtr window = FindSpotifyMainWindow();
+	            bool spotifyRunning = IsSpotifyRunning();
+	            bool windowVisible = AnySpotifyWindowVisible();
+	
+	            visibilitySpotifyItem.Enabled = spotifyRunning && window != IntPtr.Zero;
+	            visibilitySpotifyItem.Text = windowVisible
+	                ? T("Minimiser dans la barre des tâches", "Minimize to tray")
+	                : T("Afficher Spotify", "Show Spotify");
+	        }
+	
+	        private void ReloadSpotify()
+	        {
+	            IntPtr window = FindSpotifyMainWindow();
+	            if (window == IntPtr.Zero)
+	            {
+	                StartSpotifyIfNeeded();
+	                Log("Rechargement demandé mais Spotify n'avait aucune fenêtre détectable.");
+	                return;
+	            }
+	
+	            bool wasHidden = !NativeMethods.IsWindowVisible(window);
+	
+	            try
+	            {
+	                NativeMethods.ShowWindow(window, NativeMethods.SW_SHOW);
+	                NativeMethods.ShowWindow(window, NativeMethods.SW_RESTORE);
+	                NativeMethods.SetForegroundWindow(window);
+	                Thread.Sleep(150);
+	
+	                SendKeys.SendWait("^+r");
+	                Thread.Sleep(150);
+	
+	                if (wasHidden)
+	                    NativeMethods.ShowWindow(window, NativeMethods.SW_HIDE);
+	
+	                UpdateVisibilityMenu();
+	                Log("Commande de rechargement Ctrl+Maj+R envoyée à Spotify.");
+	            }
+	            catch (Exception ex)
+	            {
+	                Log("Échec du rechargement de Spotify : " + ex.Message);
+	            }
+	        }
+	
+	        private void OpenSpotiXLogs()
+	        {
+	            string logsDirectory = Path.Combine(
+	                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+	                "SpotiX-Logs");
+	
+	            OpenLogDirectory(
+	                logsDirectory,
+	                T("les logs de SpotiX+", "SpotiX+ logs"));
+	        }
+	
+	        private void OpenSpotifyLogs()
+	        {
+	            OpenLogDirectory(
+	                spotifyLogsDirectory,
+	                T("les logs de Spotify", "Spotify logs"));
+	        }
+	
+	        private void OpenLogDirectory(string directoryPath, string localizedName)
+	        {
+	            try
+	            {
+	                Directory.CreateDirectory(directoryPath);
+	                Process.Start(
+	                    new ProcessStartInfo(directoryPath)
+	                    {
+	                        UseShellExecute = true
+	                    });
+	                Log("Dossier ouvert pour " + localizedName + " : " + directoryPath);
+	            }
+	            catch (Exception ex)
+	            {
+	                Log(
+	                    "Impossible d'ouvrir le dossier pour " +
+	                    localizedName + " : " + ex.Message);
+	                ShowLocalizedMessage(
+	                    T(
+	                        "Impossible d'ouvrir ce dossier de logs.",
+	                        "Unable to open this logs folder."),
+	                    MessageBoxIcon.Error);
+	            }
+	        }
+	
+	        private void ManageSpotiXPlus()
+	        {
+	            if (manageScriptBusy)
+	                return;
+	
+	            manageScriptBusy = true;
+	            manageSpotiXItem.Enabled = false;
+	            manageSpotiXItem.Text = T(
+	                "Démarrage du script…",
+	                "Starting script…");
+	
+	            ThreadPool.QueueUserWorkItem(
+	                delegate
+	                {
+	                    string downloadedScript = Path.Combine(
+	                        Path.GetTempPath(),
+	                        "SpotiXPlus-Latest-" + Guid.NewGuid().ToString("N") + ".ps1");
+	
+	                    const string stableSource =
+	                        "https://github.com/AgoyaSpotix/spotixplus-reborn/releases/latest/download/script.ps1";
+	
+	                    string selectedSource = String.Empty;
+	                    Exception lastError = null;
+	
+	                    try
+	                    {
+	                        try
+	                        {
+	                            ServicePointManager.SecurityProtocol =
+	                                ServicePointManager.SecurityProtocol |
+	                                SecurityProtocolType.Tls12;
+	                        }
+	                        catch { }
+	
+	                        try
+	                        {
+	                            if (File.Exists(downloadedScript))
+	                                File.Delete(downloadedScript);
+	
+	                            using (WebClient client = new WebClient())
+	                            {
+	                                client.Headers[HttpRequestHeader.UserAgent] =
+	                                    "SpotiXPlus-Companion/3.0";
+	                                client.Headers[HttpRequestHeader.CacheControl] =
+	                                    "no-cache";
+	                                client.DownloadFile(stableSource, downloadedScript);
+	                            }
+	
+	                            if (!LooksLikeSpotiXScript(downloadedScript))
+	                                throw new InvalidDataException(
+	                                    "GitHub n'a pas retourné un script SpotiX+ stable valide.");
+	
+	                            selectedSource = stableSource;
+	                        }
+	                        catch (Exception sourceError)
+	                        {
+	                            lastError = sourceError;
+	                            Log(
+	                                "Téléchargement de la dernière version stable impossible depuis GitHub : " +
+	                                sourceError.Message);
+	                        }
+	
+	                        if (String.IsNullOrEmpty(selectedSource))
+	                        {
+	                            throw new InvalidOperationException(
+	                                "La dernière release stable SpotiX+ n'est pas accessible.",
+	                                lastError);
+	                        }
+	
+	                        ProcessStartInfo startInfo = new ProcessStartInfo();
+	                        startInfo.FileName = "powershell.exe";
+	                        startInfo.Arguments =
+	                            "-NoProfile -ExecutionPolicy Bypass -File \"" +
+	                            downloadedScript.Replace("\"", "\\\"") + "\"";
+	                        startInfo.WorkingDirectory =
+	                            Path.GetDirectoryName(downloadedScript);
+	                        startInfo.UseShellExecute = true;
+	                        startInfo.WindowStyle = ProcessWindowStyle.Normal;
+	
+	                        Process.Start(startInfo);
+	                        Log(
+	                            "Dernière version de SpotiX+ lancée depuis '" +
+	                            selectedSource + "'. Fichier temporaire='" +
+	                            downloadedScript + "'.");
+	                    }
+	                    catch (Exception ex)
+	                    {
+	                        Log(
+	                            "Impossible de télécharger ou lancer la dernière version de SpotiX+ : " +
+	                            ex.Message);
+	
+	                        RunOnUi(
+	                            delegate
+	                            {
+	                                MessageBox.Show(
+	                                    T(
+	                                        "Une connexion Internet est requise pour ouvrir la dernière version stable de SpotiX+.\r\n\r\nVérifiez votre connexion, puis réessayez.",
+	                                        "An Internet connection is required to open the latest stable version of SpotiX+.\r\n\r\nCheck your connection, then try again."),
+	                                    "SpotiX+ Reborn",
+	                                    MessageBoxButtons.OK,
+	                                    MessageBoxIcon.Warning);
+	                            });
+	                    }
+	                    finally
+	                    {
+	                        RunOnUi(
+	                            delegate
+	                            {
+	                                manageScriptBusy = false;
+	                                manageSpotiXItem.Enabled = true;
+	                                manageSpotiXItem.Text =
+	                                    T("Gérer SpotiX+", "Manage SpotiX+");
+	                            });
+	                    }
+	                });
+	        }
+	
+	        private static bool LooksLikeSpotiXScript(string filePath)
+	        {
+	            try
+	            {
+	                FileInfo info = new FileInfo(filePath);
+	                if (!info.Exists || info.Length < 2048)
+	                    return false;
+	
+	                string content = File.ReadAllText(filePath);
+	                bool mentionsSpotiX =
+	                    content.IndexOf(
+	                        "SpotiX+",
+	                        StringComparison.OrdinalIgnoreCase) >= 0 ||
+	                    content.IndexOf(
+	                        "spotixplus",
+	                        StringComparison.OrdinalIgnoreCase) >= 0;
+	
+	                bool looksLikePowerShell =
+	                    content.IndexOf(
+	                        "$Version",
+	                        StringComparison.OrdinalIgnoreCase) >= 0 ||
+	                    content.IndexOf(
+	                        "function ",
+	                        StringComparison.OrdinalIgnoreCase) >= 0 ||
+	                    content.IndexOf(
+	                        "param(",
+	                        StringComparison.OrdinalIgnoreCase) >= 0;
+	
+	                return mentionsSpotiX && looksLikePowerShell;
+	            }
+	            catch
+	            {
+	                return false;
+	            }
+	        }
+	
+	        private void RunOnUi(MethodInvoker action)
+	        {
+	            try
+	            {
+	                if (contextMenu.IsDisposed)
+	                    return;
+	
+	                if (contextMenu.InvokeRequired)
+	                    contextMenu.BeginInvoke(action);
+	                else
+	                    action();
+	            }
+	            catch { }
+	        }
+	
+	        private void ShowLocalizedMessage(string message, MessageBoxIcon icon)
+	        {
+	            MessageBox.Show(
+	                message,
+	                "SpotiX+ Reborn",
+	                MessageBoxButtons.OK,
+	                icon);
+	        }
+	
+	        private void OpenUrl(string url)
+	        {
+	            try
+	            {
+	                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+	                Log("Lien ouvert : " + url);
+	            }
+	            catch (Exception ex)
+	            {
+	                Log("Impossible d'ouvrir le lien '" + url + "' : " + ex.Message);
+	            }
+	        }
+	
+	        private void QuitSpotify()
+	        {
+	            Process[] processes = Process.GetProcessesByName("Spotify");
+	            try
+	            {
+	                foreach (Process process in processes)
+	                {
+	                    try
+	                    {
+	                        if (!process.HasExited)
+	                            process.Kill();
+	                    }
+	                    catch { }
+	                }
+	                Log("Fermeture de Spotify demandée.");
+	            }
+	            finally
+	            {
+	                foreach (Process process in processes)
+	                    process.Dispose();
+	            }
+	        }
+	
+	        private void Log(string message)
+	        {
+	            lock (logLock)
+	            {
+	                try
+	                {
+	                    File.AppendAllText(
+	                        logPath,
+	                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + " | " + message + Environment.NewLine,
+	                        Encoding.UTF8);
+	                }
+	                catch { }
+	            }
+	        }
+	
+	        protected override void ExitThreadCore()
+	        {
+	            shuttingDown = true;
+	            try { launchSpotifyEvent.Set(); }
+	            catch { }
+	            try { launchSpotifyThread.Join(1500); }
+	            catch { }
+	            try { launchSpotifyEvent.Dispose(); }
+	            catch { }
+	
+	            monitorTimer.Stop();
+	            monitorTimer.Dispose();
+	            notifyIcon.Visible = false;
+	            notifyIcon.Dispose();
+	            loadedIcon.Dispose();
+	            trayRemover.Dispose();
+	
+	            lock (launchedProcessesLock)
+	            {
+	                foreach (Process process in launchedSpotifyProcesses.ToArray())
+	                {
+	                    try
+	                    {
+	                        process.CancelOutputRead();
+	                        process.CancelErrorRead();
+	                    }
+	                    catch { }
+	
+	                    try { process.Dispose(); }
+	                    catch { }
+	                }
+	
+	                launchedSpotifyProcesses.Clear();
+	            }
+	
+	            Log("Arrêt de SpotiX+ Companion.");
+	            base.ExitThreadCore();
+	        }
+	    }
+	
+	    public static class EntryPoint
+	    {
+	        private static Mutex instanceMutex;
+	
+	        public static void Run(
+	            string iconPath,
+	            string logPath,
+	            string spotifyLogsDirectory,
+	            string trayIdCachePath,
+	            bool autoStartSpotify)
+	        {
+	            bool createdNew;
+	            instanceMutex = new Mutex(
+	                true,
+	                "SpotiXPlus_Companion_1534250854087921725",
+	                out createdNew);
+	
+	            if (!createdNew)
+	                return;
+	
+	            Application.EnableVisualStyles();
+	            Application.SetCompatibleTextRenderingDefault(false);
+	            Application.Run(
+	                new CompanionContext(
+	                    iconPath,
+	                    logPath,
+	                    spotifyLogsDirectory,
+	                    trayIdCachePath,
+	                    autoStartSpotify));
+	            GC.KeepAlive(instanceMutex);
+	        }
+	    }
+	}
+	'@
+	
+	try {
+	    $CompilerReferences = @(
+	        [System.Windows.Forms.NotifyIcon].Assembly.Location
+	        [System.Drawing.Icon].Assembly.Location
+	    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -Unique
+	
+	    Write-BootLog ("Compilation C# avec les références : " + ($CompilerReferences -join '; '))
+	    Add-Type -TypeDefinition $Source -Language CSharp -ReferencedAssemblies $CompilerReferences
+	    Write-BootLog 'Compilation terminée. Lancement de SpotiXPlusCompanion.EntryPoint.'
+	    [SpotiXPlusCompanion.EntryPoint]::Run(
+	        $IconPath,
+	        $LogPath,
+	        $SpotifyLogDirectory,
+	        $TrayIdCachePath,
+	        $false
+	    )
+	}
+	catch {
+	    $ErrorDetails = $_ | Out-String
+	    Write-BootLog ("ÉCHEC : " + $ErrorDetails.Trim())
+	
+	    $Message = "SpotiX+ Companion n'a pas pu démarrer.`r`n`r`n$($_.Exception.Message)`r`n`r`nLog :`r`n$LogPath"
+	    [System.Windows.Forms.MessageBox]::Show(
+	        $Message,
+	        'SpotiX+ Reborn',
+	        [System.Windows.Forms.MessageBoxButtons]::OK,
+	        [System.Windows.Forms.MessageBoxIcon]::Error
+	    ) | Out-Null
+	}
+	
+'@
+
+        $LauncherSource = @'
+	$ErrorActionPreference = "SilentlyContinue"
+	
+	$CompanionFolder = Join-Path $env:LOCALAPPDATA "SpotiXPlus"
+	$CompanionScript = Join-Path $CompanionFolder "SpotiXCompanion.ps1"
+	$PowerShellExe = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\powershell.exe"
+	$EventName = "Local\SpotiXPlus_Companion_LaunchSpotify"
+	
+	function Send-SpotiXLaunchRequest {
+	    try {
+	        $LaunchEvent = [Threading.EventWaitHandle]::OpenExisting($EventName)
+	        try {
+	            [void]$LaunchEvent.Set()
+	            return $true
+	        }
+	        finally {
+	            $LaunchEvent.Dispose()
+	        }
+	    }
+	    catch {
+	        return $false
+	    }
+	}
+	
+	if (Send-SpotiXLaunchRequest) {
+	    exit 0
+	}
+	
+	if (Test-Path -LiteralPath $CompanionScript -PathType Leaf) {
+	    Start-Process `
+	        -FilePath $PowerShellExe `
+	        -ArgumentList "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$CompanionScript`" -NoAutoStartSpotify" `
+	        -WindowStyle Hidden `
+	        -ErrorAction SilentlyContinue
+	
+	    for ($Attempt = 0; $Attempt -lt 40; $Attempt++) {
+	        Start-Sleep -Milliseconds 250
+	        if (Send-SpotiXLaunchRequest) {
+	            exit 0
+	        }
+	    }
+	}
+	
+	# Secours : si le compagnon ne répond pas, Spotify reste lançable.
+	$SpotifyExe = Join-Path $env:APPDATA "Spotify\Spotify.exe"
+	if (Test-Path -LiteralPath $SpotifyExe -PathType Leaf) {
+	    Start-Process -FilePath $SpotifyExe -ErrorAction SilentlyContinue
+	}
+	
+'@
+
+        $LauncherVbsSource = @'
+	Option Explicit
+	Dim shell, fso, folder, scriptPath, command
+	Set shell = CreateObject("WScript.Shell")
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	folder = fso.GetParentFolderName(WScript.ScriptFullName)
+	scriptPath = fso.BuildPath(folder, "SpotiXLauncher.ps1")
+	command = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & scriptPath & """"
+	shell.Run command, 0, False
+	
+'@
+
+        WriteSpotiXEmbeddedFile `
+            -Path $CompanionScript `
+            -IndentedContent $CompanionSource `
+            -Utf8Bom $true
+
+        WriteSpotiXEmbeddedFile `
+            -Path $LauncherScript `
+            -IndentedContent $LauncherSource `
+            -Utf8Bom $true
+
+        WriteSpotiXEmbeddedFile `
+            -Path $LauncherVbs `
+            -IndentedContent $LauncherVbsSource `
+            -Utf8Bom $false
+
+        if (Test-Path -LiteralPath $SpotifyIcon -PathType Leaf) {
+            Copy-Item -LiteralPath $SpotifyIcon -Destination $CompanionIcon -Force
+        }
+
+        $WshShell = New-Object -ComObject WScript.Shell
+        try {
+            $Shortcut = $WshShell.CreateShortcut($StartupShortcut)
+            $Shortcut.TargetPath = $WindowsPowerShell
+            $Shortcut.Arguments = "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$CompanionScript`" -NoAutoStartSpotify"
+            $Shortcut.WorkingDirectory = $CompanionFolder
+            if (Test-Path -LiteralPath $CompanionIcon) {
+                $Shortcut.IconLocation = "$CompanionIcon,0"
+            }
+            $Shortcut.Description = "SpotiX+ Companion"
+            $Shortcut.WindowStyle = 7
+            $Shortcut.Save()
+            [void][Runtime.InteropServices.Marshal]::ReleaseComObject($Shortcut)
+        }
+        finally {
+            [void][Runtime.InteropServices.Marshal]::ReleaseComObject($WshShell)
+        }
+
+        Start-Process `
+            -FilePath $WindowsPowerShell `
+            -ArgumentList "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$CompanionScript`" -NoAutoStartSpotify" `
+            -WindowStyle Hidden `
+            -ErrorAction Stop
+
+        $Desktop = [Environment]::GetFolderPath("Desktop")
+        $StartMenu = [Environment]::GetFolderPath("Programs")
+        $Documents = [Environment]::GetFolderPath("MyDocuments")
+        $ShortcutIcon = if (Test-Path -LiteralPath $SpotifyIcon) { $SpotifyIcon } else { $CompanionIcon }
+
+        @(
+            (Join-Path $Desktop "SpotiX+.lnk"),
+            (Join-Path (Join-Path $StartMenu "SpotiX+ Reborn") "SpotiX+.lnk"),
+            (Join-Path (Join-Path $Documents "SpotiX+ Reborn") "SpotiX+.lnk")
+        ) | ForEach-Object {
+            SetSpotiXShortcutTarget -ShortcutPath $_ -IconPath $ShortcutIcon | Out-Null
+        }
+
+        Write-Host (GetTranslation "companion-installed") -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host (GetTranslation "companion-error") -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor DarkRed
+        return $false
+    }
+}
+
+function SetSpotiXShortcutTarget {
+    param(
+        [Parameter(Mandatory)][string]$ShortcutPath,
+        [Parameter(Mandatory)][string]$IconPath,
+        [string]$Description = "SpotiX+ Reborn by Voltan, made with <3"
+    )
+
+    $LauncherVbs = Join-Path (Join-Path $env:LOCALAPPDATA "SpotiXPlus") "SpotiXLauncher.vbs"
+    $WscriptExe = Join-Path $env:WINDIR "System32\wscript.exe"
+
+    if (-not (Test-Path -LiteralPath $LauncherVbs -PathType Leaf)) {
+        return $false
+    }
+
+    $ShortcutFolder = Split-Path -Parent $ShortcutPath
+    if ($ShortcutFolder -and -not (Test-Path -LiteralPath $ShortcutFolder)) {
+        New-Item -ItemType Directory -Path $ShortcutFolder -Force | Out-Null
+    }
+
+    $WshShell = New-Object -ComObject WScript.Shell
+    try {
+        $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+        $Shortcut.TargetPath = $WscriptExe
+        $Shortcut.Arguments = "`"$LauncherVbs`""
+        $Shortcut.WorkingDirectory = Split-Path -Parent $LauncherVbs
+        $Shortcut.IconLocation = "$IconPath,0"
+        $Shortcut.Description = $Description
+        $Shortcut.WindowStyle = 7
+        $Shortcut.Save()
+        [void][Runtime.InteropServices.Marshal]::ReleaseComObject($Shortcut)
+        return $true
+    }
+    finally {
+        [void][Runtime.InteropServices.Marshal]::ReleaseComObject($WshShell)
+    }
+}
+
 function InstallDev {
 	#dev
 	#Delof le farfadet malicieux
@@ -1660,6 +3538,7 @@ function Install {
 			#Rich Presence Discord
 			InstallDiscordRichPresence
 
+			Write-Host ".."
 			# Renommer le raccourci Spotify du bureau
 			#$oldFile = "$env:UserProfile\Desktop\Spotify.lnk"
 			#$newFile = "$env:UserProfile\Desktop\$AppNameShort.lnk"
@@ -1756,6 +3635,11 @@ function Install {
    		 	Write-Host "Erreur pendant la création du raccourci Spotify :" -ForegroundColor Red
     		Write-Host $_.Exception.Message -ForegroundColor DarkRed
 	}
+
+			# SpotiX+ Companion : icône de notification, suppression de l’icône native,
+			# journalisation Spotify et gestion rapide depuis la barre des tâches.
+			$null = InstallSpotiXCompanion
+
 			SetTitle (GetTranslation "install-finished")
 			PrintLogo
 			Write-Host (GetTranslation "configuration-finished")
@@ -1812,6 +3696,8 @@ function Uninstall {
 			Set-ItemProperty -Path $tmp -Name IsReadOnly -Value $false
 		}
 		
+		RemoveSpotiXCompanion
+
 		Write-Host (GetTranslation "spotx-uninstall")
 		RemoveIfExists "$env:AppData\Spotify"
 		RemoveIfExists "$env:LocalAppData\Spotify"
@@ -2270,6 +4156,8 @@ function CreateShortcutOnDesktop {
    		 	Write-Host "Erreur pendant la création du raccourci Spotify :" -ForegroundColor Red
     		Write-Host $_.Exception.Message -ForegroundColor DarkRed
 	}
+			$null = InstallSpotiXCompanion
+
 			Write-Host (GetTranslation "create-shortcut-done")
 			EnterToContinue -DefaultPrompt $true
 		}
@@ -2303,7 +4191,7 @@ function Main {
 		"10. 👋 $(GetTranslation 'lobby-menu10')"
 	) -join "`n`t")
 
-	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+	$userChoices0 = GetUserChoices -validResponses @("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "50", "99")
 
 	# Exécute les commandes en fonction des réponses
 	switch ($userChoices0.Trim()) {
@@ -2353,6 +4241,20 @@ function Main {
 		}
 		"11" {
 			InstallDev
+			Main
+		}
+		"50" {
+			SetTitle "SpotiX+ Companion"
+			PrintLogo
+
+			$CompanionInstalled = InstallSpotiXCompanion
+
+			if (-not $CompanionInstalled) {
+				Write-Host ""
+				Write-Host (GetTranslation "companion-error") -ForegroundColor Red
+			}
+
+			EnterToContinue -DefaultPrompt $true
 			Main
 		}
 		"99" {
