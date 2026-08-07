@@ -5,10 +5,10 @@
 *Version Française* | [*English version*](https://github.com/AgoyaSpotix/spotixplus-reborn/blob/main/README.md)
 
 ## Qu'est-ce que SpotiX+ Reborn ?
-Il s'agit d'une version modifiée de Spotify, vous permettant de ne plus avoir de pub, passer les titres à l'infini, et bien plus encore !
+Il s'agit d'une version modifiée de Spotify, vous permettant de ne plus avoir de pub, passer les titres à l'infini, et bien plus encore ! \
+La version "Reborn" est une réécriture du script SpotiX+ original (développé à la base par Voltan)
 
-Originalement créé par Voltan, SpotiX+ n'est malheureusement plus en développement.\
-Nous avons donc décidé de prendre le relais, ainsi fut né SpotiX+ Reborn.
+Le script est basé sur SpotX, Spicetify et SpotiFLAC pour donner la meilleure expérience possible.
 
 ## Téléchargements et installation
 Rendez-vous sur la section [Releases](https://github.com/AgoyaSpotix/spotixplus-reborn/releases/) pour pouvoir télécharger la dernière version du programme.\
