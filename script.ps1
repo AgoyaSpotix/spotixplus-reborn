@@ -1,7 +1,22 @@
-﻿# Constantes
+if ($env:SPOTIX_WINDOW_RESIZED -ne "1" -and $PSCommandPath) {
+    $env:SPOTIX_WINDOW_RESIZED = "1"
+
+    Start-Process "wt.exe" -ArgumentList @(
+        "-w", "new",
+        "--size", "145,35",
+        "pwsh.exe",
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "`"$PSCommandPath`""
+    )
+
+    exit
+}
+
+# Constantes
 $AppNameShort = "SpotiX+"
 $AppName = "$AppNameShort PC Script"
-$Version = "3.0 rc1"
+$Version = "3.0"
 $ByPassAdmin = $false
 $NoTranslations = $false
 
@@ -30,13 +45,15 @@ $Logo = "
 
        ---------------------------------------------
       /               Made with <3                 /
-     /                    v$Version               /
+     /                    v$Version                    /
     ----------------------------------------------
 "
+
 
 # Paramètres PowerShell
 $ErrorActionPreference = "Continue"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 
 function EnterToContinue {
 	param (
@@ -495,8 +512,8 @@ $localizations = @"
 			"en-US": "New UI - Latest version      - Compatible with Windows 11/10     - External plugins compatible - EXPERIMENTAL"
 		},
 		"app-install-version-choice-version2": {
-			"fr-FR": "Nouvelle interface - Version 1.2.78.418 - Compatible avec Windows 11/10     - Plugin externe compatible - Stable, `e[1;32mRECOMMANDÉ`e[0m",
-			"en-US": "New UI - Version 1.2.78.418 - Compatible with Windows 11/10     - External plugins compatible - Stable, `e[1;32mRECOMMANDED`e[0m"
+			"fr-FR": "Nouvelle interface - Version 1.2.78.418 - Compatible avec Windows 11/10     - Plugin externe compatible - Stable",
+			"en-US": "New UI - Version 1.2.78.418 - Compatible with Windows 11/10     - External plugins compatible - Stable"
 		},
 		"app-install-version-choice-version3": {
 			"fr-FR": "Ancienne interface - Version 1.2.5.1006  - Compatible avec Windows 11/10/8.1 - Plugin externe instable   - Instable",
